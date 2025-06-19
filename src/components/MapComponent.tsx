@@ -1,72 +1,92 @@
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
-import L, { LatLngExpression } from 'leaflet';
+import { MapContainer, TileLayer, Polyline, Marker, useMap, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useRoutingContext } from '@/contexts/RoutingContext';
+import { useEffect, useState } from 'react';
+import { LatLngExpression, Icon } from 'leaflet';
+import { Button } from './ui/button';
+import { LocateFixed } from 'lucide-react';
+import { toast } from './ui/use-toast';
 
-import { useRouting } from '@/contexts/RoutingContext'; 
-import type { RouteData } from '@/hooks/useRouting';
-import { RouteForm } from './RouteForm';
-import { RouteDetails } from './RouteDetails';
-
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-});
-
-function MapController({ route, center }: { route: RouteData | null, center: LatLngExpression | null }) {
+const MyLocationButton = () => {
   const map = useMap();
+  const [position, setPosition] = useState<LatLngExpression | null>(null);
 
-  useEffect(() => {
-    if (route && route.coordinates.length > 0) {
-      const bounds = L.latLngBounds(route.coordinates as LatLngExpression[]);
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [route, map]);
+  const handleLocate = () => {
+    map.locate().on('locationfound', function (e) {
+      map.flyTo(e.latlng, 14);
+      setPosition(e.latlng);
+    }).on('locationerror', function() {
+      toast({
+        title: "Error de ubicación",
+        description: "No se pudo obtener tu ubicación. Por favor, comprueba los permisos.",
+        variant: "destructive"
+      });
+    });
+  };
 
-  useEffect(() => {
-    if (center) {
-      map.flyTo(center, 13);
-    }
-  }, [center, map]);
+  const userIcon = new Icon({
+    iconUrl: 'https://cdn-icons-png.flaticon.com/512/3179/3179068.png',
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
 
-  return null;
+  return (
+    <>
+      <div className="leaflet-bottom leaflet-right mb-12">
+        <div className="leaflet-control leaflet-bar">
+          <Button
+            onClick={handleLocate}
+            size="icon"
+            className="w-10 h-10 bg-card hover:bg-muted"
+          >
+            <LocateFixed className="h-5 w-5 text-primary" />
+          </Button>
+        </div>
+      </div>
+      {position && (
+        <Marker position={position} icon={userIcon}>
+          <Popup>Estás aquí</Popup>
+        </Marker>
+      )}
+    </>
+  );
+};
+
+const MapEvents = () => {
+    const map = useMap();
+    const { panTarget } = useRoutingContext();
+
+    useEffect(() => {
+        if (panTarget) {
+            map.flyTo(panTarget, 13);
+        }
+    }, [panTarget, map]);
+
+    return null;
 }
 
 export function MapComponent() {
-  const { currentRoute, clearRoute, mapCenter } = useRouting();
+  const { currentRoute } = useRoutingContext();
   const defaultPosition: LatLngExpression = [40.416775, -3.703790];
 
   return (
-    <div className="relative h-full w-full">
+    <MapContainer center={defaultPosition} zoom={6} style={{ height: '100%', width: '100%', zIndex: 0 }}>
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      />
       
-      <div className="absolute top-4 left-4 z-[1000] w-full max-w-sm">
-        <RouteForm />
-      </div>
-
       {currentRoute && (
-        <div className="absolute bottom-4 left-4 z-[1000] w-full max-w-sm">
-          <RouteDetails route={currentRoute} onClear={clearRoute} />
-        </div>
+        <Polyline
+          positions={currentRoute.coordinates as LatLngExpression[]}
+          color="#ec4899"
+          weight={5}
+        />
       )}
       
-      <MapContainer center={defaultPosition} zoom={6} className="h-full w-full z-0">
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        />
-
-        {currentRoute && (
-          <>
-            <Polyline positions={currentRoute.coordinates as LatLngExpression[]} color="hsl(var(--primary))" weight={5} />
-            <Marker position={currentRoute.coordinates[0] as LatLngExpression} />
-            <Marker position={currentRoute.coordinates[currentRoute.coordinates.length - 1] as LatLngExpression} />
-          </>
-        )}
-        
-        <MapController route={currentRoute} center={mapCenter} />
-      </MapContainer>
-    </div>
+      <MapEvents />
+      <MyLocationButton />
+    </MapContainer>
   );
 }
