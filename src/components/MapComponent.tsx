@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import L, { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 import { useRouting } from '@/contexts/RoutingContext'; 
+import type { RouteData } from '@/hooks/useRouting';
 import { RouteForm } from './RouteForm';
 import { RouteDetails } from './RouteDetails';
 
@@ -14,20 +15,28 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-function MapUpdater({ route }) {
+function MapController({ route, center }: { route: RouteData | null, center: LatLngExpression | null }) {
   const map = useMap();
+
   useEffect(() => {
     if (route && route.coordinates.length > 0) {
-      const bounds = L.latLngBounds(route.coordinates);
+      const bounds = L.latLngBounds(route.coordinates as LatLngExpression[]);
       map.fitBounds(bounds, { padding: [50, 50] });
     }
   }, [route, map]);
+
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, 13);
+    }
+  }, [center, map]);
+
   return null;
 }
 
 export function MapComponent() {
-  const { currentRoute, clearRoute } = useRouting();
-  const defaultPosition: L.LatLngExpression = [40.416775, -3.703790];
+  const { currentRoute, clearRoute, mapCenter } = useRouting();
+  const defaultPosition: LatLngExpression = [40.416775, -3.703790];
 
   return (
     <div className="relative h-full w-full">
@@ -50,12 +59,13 @@ export function MapComponent() {
 
         {currentRoute && (
           <>
-            <Polyline positions={currentRoute.coordinates as L.LatLngExpression[]} color="hsl(var(--primary))" weight={5} />
-            <Marker position={currentRoute.coordinates[0] as L.LatLngExpression} />
-            <Marker position={currentRoute.coordinates[currentRoute.coordinates.length - 1] as L.LatLngExpression} />
-            <MapUpdater route={currentRoute} />
+            <Polyline positions={currentRoute.coordinates as LatLngExpression[]} color="hsl(var(--primary))" weight={5} />
+            <Marker position={currentRoute.coordinates[0] as LatLngExpression} />
+            <Marker position={currentRoute.coordinates[currentRoute.coordinates.length - 1] as LatLngExpression} />
           </>
         )}
+        
+        <MapController route={currentRoute} center={mapCenter} />
       </MapContainer>
     </div>
   );
