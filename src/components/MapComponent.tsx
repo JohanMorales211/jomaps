@@ -1,10 +1,7 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Navigation, MapPin, Search } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useRouting } from '@/hooks/useRouting';
 import RouteForm from './RouteForm';
@@ -18,31 +15,26 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-const MapComponent: React.FC = () => {
+interface MapComponentProps {
+  onSearchFromHeader?: (query: string) => void;
+  onUseCurrentLocationFromHeader?: () => void;
+}
+
+const MapComponent: React.FC<MapComponentProps> = ({ 
+  onSearchFromHeader, 
+  onUseCurrentLocationFromHeader 
+}) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const routeLayer = useRef<L.Polyline | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
   
   const { calculateRoute, clearRoute, currentRoute, isCalculating } = useRouting();
 
-  useEffect(() => {
-    if (!mapContainer.current) return;
-
-    // Initialize map with OpenStreetMap - Start with a general view of Colombia
-    map.current = L.map(mapContainer.current).setView([4.5709, -74.2973], 6);
-
-    // Add OpenStreetMap tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(map.current);
-
-    // Get user location
+  const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -51,6 +43,18 @@ const MapComponent: React.FC = () => {
           
           if (map.current) {
             map.current.setView([latitude, longitude], 15);
+            
+            // Clear previous user location markers
+            markersRef.current.forEach(marker => {
+              const popupContent = marker.getPopup()?.getContent();
+              if (popupContent === 'Tu ubicación actual') {
+                map.current?.removeLayer(marker);
+              }
+            });
+            markersRef.current = markersRef.current.filter(marker => {
+              const popupContent = marker.getPopup()?.getContent();
+              return popupContent !== 'Tu ubicación actual';
+            });
             
             // Add user location marker with custom icon
             const userIcon = L.divIcon({
@@ -77,7 +81,7 @@ const MapComponent: React.FC = () => {
           console.error('Error getting location:', error);
           toast({
             title: "Error de ubicación",
-            description: "No se pudo obtener tu ubicación actual. Puedes buscar ubicaciones manualmente.",
+            description: "No se pudo obtener tu ubicación actual. Verifica que tengas GPS activado y permisos de ubicación.",
             variant: "destructive",
           });
         },
@@ -94,6 +98,22 @@ const MapComponent: React.FC = () => {
         variant: "destructive",
       });
     }
+  };
+
+  useEffect(() => {
+    if (!mapContainer.current) return;
+
+    // Initialize map with OpenStreetMap - Start with a general view of Colombia
+    map.current = L.map(mapContainer.current).setView([4.5709, -74.2973], 6);
+
+    // Add OpenStreetMap tile layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+      maxZoom: 19,
+    }).addTo(map.current);
+
+    // Get initial user location
+    getCurrentLocation();
 
     // Cleanup
     return () => {
@@ -102,7 +122,17 @@ const MapComponent: React.FC = () => {
         map.current = null;
       }
     };
-  }, [toast]);
+  }, []);
+
+  // Register the header search and location functions
+  useEffect(() => {
+    if (onSearchFromHeader) {
+      onSearchFromHeader = searchLocation;
+    }
+    if (onUseCurrentLocationFromHeader) {
+      onUseCurrentLocationFromHeader = getCurrentLocation;
+    }
+  }, [onSearchFromHeader, onUseCurrentLocationFromHeader]);
 
   // Effect para dibujar la ruta en el mapa
   useEffect(() => {
@@ -264,46 +294,12 @@ const MapComponent: React.FC = () => {
     }
   };
 
-  const handleSearch = () => {
-    searchLocation(searchQuery);
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      searchLocation(searchQuery);
-    }
-  };
-
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="absolute inset-0 rounded-lg shadow-lg" />
-      
-      {/* Search overlay */}
-      <div className="absolute top-4 left-4 right-4 z-[1000]">
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-jomaps-pink-300">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-jomaps-navy-600 w-4 h-4" />
-              <Input
-                placeholder="Buscar ubicación..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={handleKeyPress}
-                className="pl-10 border-jomaps-pink-200 focus:border-jomaps-pink-400 focus:ring-jomaps-pink-400"
-              />
-            </div>
-            <Button 
-              onClick={handleSearch}
-              className="bg-jomaps-pink-500 hover:bg-jomaps-pink-600 text-white"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
 
       {/* Route form */}
-      <div className="absolute top-24 left-4 w-80 z-[1000]">
+      <div className="absolute top-4 left-4 w-80 z-[1000]">
         <RouteForm
           onCalculateRoute={handleCalculateRoute}
           onClearRoute={handleClearRoute}
@@ -314,7 +310,7 @@ const MapComponent: React.FC = () => {
 
       {/* Route details */}
       {currentRoute && (
-        <div className="absolute top-24 right-4 w-80 z-[1000]">
+        <div className="absolute top-4 right-4 w-80 z-[1000]">
           <RouteDetails route={currentRoute} />
         </div>
       )}
