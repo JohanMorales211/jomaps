@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Navigation, MapPin, Search } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { useRouting } from '@/hooks/useRouting';
+import RouteForm from './RouteForm';
+import RouteDetails from './RouteDetails';
 
 // Fix for default markers in Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -17,10 +20,14 @@ L.Icon.Default.mergeOptions({
 const MapComponent: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
+  const routeLayer = useRef<L.Polyline | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
-  const markersRef = useRef<L.Marker[]>([]);
+  
+  const { calculateRoute, clearRoute, currentRoute, isCalculating } = useRouting();
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -84,6 +91,92 @@ const MapComponent: React.FC = () => {
       }
     };
   }, []);
+
+  // Effect para dibujar la ruta en el mapa
+  useEffect(() => {
+    if (!map.current) return;
+
+    // Limpiar ruta anterior
+    if (routeLayer.current) {
+      map.current.removeLayer(routeLayer.current);
+      routeLayer.current = null;
+    }
+
+    // Dibujar nueva ruta
+    if (currentRoute) {
+      routeLayer.current = L.polyline(currentRoute.coordinates, {
+        color: '#ec4899',
+        weight: 5,
+        opacity: 0.8
+      }).addTo(map.current);
+
+      // Ajustar vista del mapa para mostrar toda la ruta
+      const bounds = L.latLngBounds(currentRoute.coordinates);
+      map.current.fitBounds(bounds, { padding: [20, 20] });
+
+      // Agregar marcadores de inicio y fin
+      const startCoord = currentRoute.coordinates[0];
+      const endCoord = currentRoute.coordinates[currentRoute.coordinates.length - 1];
+
+      const startIcon = L.divIcon({
+        html: '<div style="background-color: #22c55e; width: 15px; height: 15px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+        className: 'custom-start-marker',
+        iconSize: [15, 15],
+        iconAnchor: [7, 7]
+      });
+
+      const endIcon = L.divIcon({
+        html: '<div style="background-color: #ef4444; width: 15px; height: 15px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+        className: 'custom-end-marker',
+        iconSize: [15, 15],
+        iconAnchor: [7, 7]
+      });
+
+      const startMarker = L.marker(startCoord, { icon: startIcon })
+        .addTo(map.current)
+        .bindPopup('Origen');
+
+      const endMarker = L.marker(endCoord, { icon: endIcon })
+        .addTo(map.current)
+        .bindPopup('Destino');
+
+      markersRef.current.push(startMarker, endMarker);
+    }
+  }, [currentRoute]);
+
+  const handleCalculateRoute = async (origin: string, destination: string) => {
+    // Limpiar marcadores anteriores de búsqueda
+    markersRef.current.forEach(marker => {
+      if (marker.getPopup()?.getContent() !== 'Tu ubicación actual') {
+        map.current?.removeLayer(marker);
+      }
+    });
+    markersRef.current = markersRef.current.filter(marker => 
+      marker.getPopup()?.getContent() === 'Tu ubicación actual'
+    );
+
+    await calculateRoute(origin, destination);
+  };
+
+  const handleClearRoute = () => {
+    clearRoute();
+    
+    // Limpiar ruta del mapa
+    if (routeLayer.current && map.current) {
+      map.current.removeLayer(routeLayer.current);
+      routeLayer.current = null;
+    }
+
+    // Limpiar marcadores de ruta
+    markersRef.current.forEach(marker => {
+      if (marker.getPopup()?.getContent() !== 'Tu ubicación actual') {
+        map.current?.removeLayer(marker);
+      }
+    });
+    markersRef.current = markersRef.current.filter(marker => 
+      marker.getPopup()?.getContent() === 'Tu ubicación actual'
+    );
+  };
 
   const searchLocation = async (query: string) => {
     if (!query.trim()) return;
@@ -189,6 +282,23 @@ const MapComponent: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Route form */}
+      <div className="absolute top-24 left-4 w-80 z-[1000]">
+        <RouteForm
+          onCalculateRoute={handleCalculateRoute}
+          onClearRoute={handleClearRoute}
+          isCalculating={isCalculating}
+          hasRoute={!!currentRoute}
+        />
+      </div>
+
+      {/* Route details */}
+      {currentRoute && (
+        <div className="absolute top-24 right-4 w-80 z-[1000]">
+          <RouteDetails route={currentRoute} />
+        </div>
+      )}
 
       {/* Current location info */}
       {userLocation && (
