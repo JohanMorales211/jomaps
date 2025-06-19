@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -32,8 +33,8 @@ const MapComponent: React.FC = () => {
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Initialize map with OpenStreetMap
-    map.current = L.map(mapContainer.current).setView([40.7128, -74.006], 13);
+    // Initialize map with OpenStreetMap - Start with a general view of Colombia
+    map.current = L.map(mapContainer.current).setView([4.5709, -74.2973], 6);
 
     // Add OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -46,7 +47,7 @@ const MapComponent: React.FC = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { longitude, latitude } = position.coords;
-          setUserLocation([longitude, latitude]);
+          setUserLocation([latitude, longitude]);
           
           if (map.current) {
             map.current.setView([latitude, longitude], 15);
@@ -76,11 +77,22 @@ const MapComponent: React.FC = () => {
           console.error('Error getting location:', error);
           toast({
             title: "Error de ubicación",
-            description: "No se pudo obtener tu ubicación actual",
+            description: "No se pudo obtener tu ubicación actual. Puedes buscar ubicaciones manualmente.",
             variant: "destructive",
           });
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000
         }
       );
+    } else {
+      toast({
+        title: "Geolocalización no disponible",
+        description: "Tu navegador no soporta geolocalización",
+        variant: "destructive",
+      });
     }
 
     // Cleanup
@@ -90,7 +102,7 @@ const MapComponent: React.FC = () => {
         map.current = null;
       }
     };
-  }, []);
+  }, [toast]);
 
   // Effect para dibujar la ruta en el mapa
   useEffect(() => {
@@ -101,6 +113,18 @@ const MapComponent: React.FC = () => {
       map.current.removeLayer(routeLayer.current);
       routeLayer.current = null;
     }
+
+    // Limpiar marcadores de ruta anteriores (mantener ubicación del usuario)
+    markersRef.current.forEach(marker => {
+      const popupContent = marker.getPopup()?.getContent();
+      if (popupContent !== 'Tu ubicación actual' && typeof popupContent === 'string' && !popupContent.includes('búsqueda')) {
+        map.current?.removeLayer(marker);
+      }
+    });
+    markersRef.current = markersRef.current.filter(marker => {
+      const popupContent = marker.getPopup()?.getContent();
+      return popupContent === 'Tu ubicación actual' || (typeof popupContent === 'string' && popupContent.includes('búsqueda'));
+    });
 
     // Dibujar nueva ruta
     if (currentRoute) {
@@ -145,16 +169,7 @@ const MapComponent: React.FC = () => {
   }, [currentRoute]);
 
   const handleCalculateRoute = async (origin: string, destination: string) => {
-    // Limpiar marcadores anteriores de búsqueda
-    markersRef.current.forEach(marker => {
-      if (marker.getPopup()?.getContent() !== 'Tu ubicación actual') {
-        map.current?.removeLayer(marker);
-      }
-    });
-    markersRef.current = markersRef.current.filter(marker => 
-      marker.getPopup()?.getContent() === 'Tu ubicación actual'
-    );
-
+    console.log('Calculando ruta desde:', origin, 'hacia:', destination);
     await calculateRoute(origin, destination);
   };
 
@@ -167,15 +182,17 @@ const MapComponent: React.FC = () => {
       routeLayer.current = null;
     }
 
-    // Limpiar marcadores de ruta
+    // Limpiar marcadores de ruta (mantener ubicación del usuario y búsquedas)
     markersRef.current.forEach(marker => {
-      if (marker.getPopup()?.getContent() !== 'Tu ubicación actual') {
+      const popupContent = marker.getPopup()?.getContent();
+      if (popupContent !== 'Tu ubicación actual' && typeof popupContent === 'string' && !popupContent.includes('búsqueda')) {
         map.current?.removeLayer(marker);
       }
     });
-    markersRef.current = markersRef.current.filter(marker => 
-      marker.getPopup()?.getContent() === 'Tu ubicación actual'
-    );
+    markersRef.current = markersRef.current.filter(marker => {
+      const popupContent = marker.getPopup()?.getContent();
+      return popupContent === 'Tu ubicación actual' || (typeof popupContent === 'string' && popupContent.includes('búsqueda'));
+    });
   };
 
   const searchLocation = async (query: string) => {
@@ -200,13 +217,15 @@ const MapComponent: React.FC = () => {
 
           // Clear previous search markers (keep user location marker)
           markersRef.current.forEach(marker => {
-            if (marker.getPopup()?.getContent() !== 'Tu ubicación actual') {
+            const popupContent = marker.getPopup()?.getContent();
+            if (typeof popupContent === 'string' && popupContent.includes('búsqueda')) {
               map.current?.removeLayer(marker);
             }
           });
-          markersRef.current = markersRef.current.filter(marker => 
-            marker.getPopup()?.getContent() === 'Tu ubicación actual'
-          );
+          markersRef.current = markersRef.current.filter(marker => {
+            const popupContent = marker.getPopup()?.getContent();
+            return !(typeof popupContent === 'string' && popupContent.includes('búsqueda'));
+          });
 
           // Add search result marker
           const searchIcon = L.divIcon({
@@ -218,7 +237,7 @@ const MapComponent: React.FC = () => {
           
           const searchMarker = L.marker([latitude, longitude], { icon: searchIcon })
             .addTo(map.current)
-            .bindPopup(`<div style="max-width: 200px;"><strong>${placeName}</strong></div>`)
+            .bindPopup(`<div style="max-width: 200px;"><strong>Resultado de búsqueda:</strong><br/>${placeName}</div>`)
             .openPopup();
           
           markersRef.current.push(searchMarker);
@@ -307,7 +326,7 @@ const MapComponent: React.FC = () => {
             <div className="w-3 h-3 bg-jomaps-pink-500 rounded-full animate-pulse"></div>
             <div className="flex items-center gap-2 text-jomaps-navy-700">
               <MapPin className="w-4 h-4" />
-              <span className="text-sm font-medium">Tu ubicación actual</span>
+              <span className="text-sm font-medium">Tu ubicación actual detectada</span>
             </div>
             <div className="ml-auto">
               <Navigation className="w-4 h-4 text-jomaps-blue-600" />
