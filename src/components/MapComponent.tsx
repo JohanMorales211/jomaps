@@ -53,6 +53,7 @@ const MyLocationButton = () => {
   );
 };
 
+
 const MapEvents = () => {
     const map = useMap();
     const { panTarget } = useRoutingContext();
@@ -68,10 +69,11 @@ const MapEvents = () => {
 
 export function MapComponent() {
   const { currentRoute } = useRoutingContext();
-  const defaultPosition: LatLngExpression = [40.416775, -3.703790];
+  const defaultPosition: LatLngExpression = [4.5709, -74.2973]; 
+  const defaultZoom = 6; 
 
   return (
-    <MapContainer center={defaultPosition} zoom={6} style={{ height: '100%', width: '100%', zIndex: 0 }}>
+    <MapContainer center={defaultPosition} zoom={defaultZoom} style={{ height: '100%', width: '100%', zIndex: 0 }}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

@@ -85,6 +85,21 @@ export const useRouting = () => {
   const clearRoute = () => {
     setCurrentRoute(null);
   };
+  
+  const reverseGeocode = async (lat: number, lng: number): Promise<string | null> => {
+    try {
+      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const data = await response.json();
+      if (data && data.display_name) {
+        return data.display_name;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error in reverse geocoding:', error);
+      return null;
+    }
+  };
 
-  return { calculateRoute, clearRoute, currentRoute, isCalculating, searchLocation };
+
+  return { calculateRoute, clearRoute, currentRoute, isCalculating, searchLocation, reverseGeocode };
 };

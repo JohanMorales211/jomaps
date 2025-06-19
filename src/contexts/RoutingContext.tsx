@@ -9,6 +9,7 @@ interface RoutingContextProps {
   searchLocation: (query: string) => Promise<RoutePoint | null>;
   panTo: (coords: [number, number]) => void;
   panTarget: [number, number] | null;
+  reverseGeocode: (lat: number, lng: number) => Promise<string | null>; 
 }
 
 const RoutingContext = createContext<RoutingContextProps | undefined>(undefined);
@@ -23,7 +24,7 @@ export const RoutingProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const value = {
-    ...routing,
+    ...routing, 
     panTo,
     panTarget,
   };
