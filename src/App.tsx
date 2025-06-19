@@ -1,29 +1,47 @@
+import { Toaster } from "@/components/ui/toaster"
+import { RoutingProvider, useRouting } from "@/contexts/RoutingContext"
+import IndexPage from "@/pages/Index"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
-import React from 'react';
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+const LocationPermissionDialog = () => {
+  const { showPermissionDeniedDialog, setShowPermissionDeniedDialog } = useRouting();
 
-const queryClient = new QueryClient();
+  return (
+    <AlertDialog open={showPermissionDeniedDialog} onOpenChange={setShowPermissionDeniedDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Permiso de Ubicación Denegado</AlertDialogTitle>
+          <AlertDialogDescription>
+            Para usar tu ubicación actual, necesitas darnos permiso.
+            <br /><br />
+            Busca el ícono de candado (🔒) en la barra de direcciones de tu navegador, haz clic en él y activa el permiso de "Ubicación". Luego, intenta usar el botón de nuevo.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogAction onClick={() => setShowPermissionDeniedDialog(false)}>
+          Entendido
+        </AlertDialogAction>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <RoutingProvider>
+      <div className="h-full w-full bg-background">
+        <IndexPage />
+        <Toaster />
+        <LocationPermissionDialog />
+      </div>
+    </RoutingProvider>
+  )
+}
 
-export default App;
+export default App

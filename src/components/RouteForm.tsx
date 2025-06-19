@@ -1,102 +1,64 @@
-
-import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Route, X, Navigation } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, MapPin } from "lucide-react";
+import { useRouting } from "@/contexts/RoutingContext";
 
-interface RouteFormProps {
-  onCalculateRoute: (origin: string, destination: string) => void;
-  onClearRoute: () => void;
-  isCalculating: boolean;
-  hasRoute: boolean;
-}
+export function RouteForm() {
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+  const [isLocating, setIsLocating] = useState(false);
 
-const RouteForm: React.FC<RouteFormProps> = ({ 
-  onCalculateRoute, 
-  onClearRoute, 
-  isCalculating, 
-  hasRoute 
-}) => {
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
+  const { calculateRoute, isCalculating, getCurrentLocationAsAddress } = useRouting();
 
-  const handleCalculate = () => {
-    if (origin.trim() && destination.trim()) {
-      onCalculateRoute(origin, destination);
+  const handleGetCurrentLocation = async () => {
+    setIsLocating(true);
+    const address = await getCurrentLocationAsAddress();
+    if (address) {
+      setOrigin(address);
     }
+    setIsLocating(false);
   };
 
-  const handleClear = () => {
-    setOrigin('');
-    setDestination('');
-    onClearRoute();
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleCalculate();
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!origin || !destination) return;
+    await calculateRoute(origin, destination);
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-xl p-4 shadow-lg border border-jomaps-pink-300">
-      <div className="flex items-center gap-2 mb-3">
-        <Route className="w-5 h-5 text-jomaps-pink-600" />
-        <span className="font-semibold text-jomaps-navy-700">Calcular Ruta</span>
-      </div>
-      
-      <div className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium text-jomaps-navy-600 mb-1">
-            Origen
-          </label>
-          <Input
-            placeholder="Ej: Calarca"
-            value={origin}
-            onChange={(e) => setOrigin(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="border-jomaps-pink-200 focus:border-jomaps-pink-400 focus:ring-jomaps-pink-400"
-            disabled={isCalculating}
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-jomaps-navy-600 mb-1">
-            Destino
-          </label>
-          <Input
-            placeholder="Ej: Armenia"
-            value={destination}
-            onChange={(e) => setDestination(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="border-jomaps-pink-200 focus:border-jomaps-pink-400 focus:ring-jomaps-pink-400"
-            disabled={isCalculating}
-          />
-        </div>
-        
-        <div className="flex gap-2">
-          <Button 
-            onClick={handleCalculate}
-            disabled={!origin.trim() || !destination.trim() || isCalculating}
-            className="flex-1 bg-jomaps-pink-500 hover:bg-jomaps-pink-600 text-white"
-          >
-            <Navigation className="w-4 h-4 mr-2" />
-            {isCalculating ? 'Calculando...' : 'Calcular'}
+    <Card>
+      <CardHeader>
+        <CardTitle>Calcular Ruta</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="origin">Origen</Label>
+            <div className="flex items-center space-x-2">
+              <Input
+                id="origin"
+                placeholder="Ej: Madrid, España"
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
+                required
+              />
+              <Button type="button" variant="outline" size="icon" onClick={handleGetCurrentLocation} disabled={isLocating} aria-label="Usar mi ubicación actual">
+                {isLocating ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="destination">Destino</Label>
+            <Input id="destination" placeholder="Ej: Barcelona, España" value={destination} onChange={(e) => setDestination(e.target.value)} required />
+          </div>
+          <Button type="submit" className="w-full" disabled={isCalculating}>
+            {isCalculating ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Calculando...</> : "Calcular Ruta"}
           </Button>
-          
-          {hasRoute && (
-            <Button 
-              onClick={handleClear}
-              variant="outline"
-              className="border-jomaps-pink-300 text-jomaps-pink-600 hover:bg-jomaps-pink-50"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
+        </form>
+      </CardContent>
+    </Card>
   );
-};
-
-export default RouteForm;
+}

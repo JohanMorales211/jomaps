@@ -1,9 +1,6 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
 @layer base {
   :root {
@@ -109,9 +106,16 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
 }
 
-/* Custom gradient backgrounds for Jomaps */
 .jomaps-gradient {
   background: linear-gradient(135deg, #fce7f3 0%, #e0f2fe 100%);
 }
@@ -120,7 +124,6 @@
   background: linear-gradient(135deg, #1e293b 0%, #831843 100%);
 }
 
-/* Leaflet custom styles */
 .leaflet-popup-content-wrapper {
   background: linear-gradient(135deg, #fce7f3 0%, #e0f2fe 100%) !important;
   border-radius: 12px !important;
