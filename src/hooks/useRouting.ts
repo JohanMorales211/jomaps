@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
+import polyline from '@mapbox/polyline';
 
 export interface RoutePoint {
   lat: number;
@@ -57,14 +58,18 @@ export const useRouting = () => {
         return null;
       }
 
-      const osrmProfileMap = {
-        driving: 'driving',
-        cycling: 'bike',
-        walking: 'foot',
+      const baseUrlMap = {
+        driving: 'https://routing.openstreetmap.de/routed-car/route/v1/driving/',
+        cycling: 'https://routing.openstreetmap.de/routed-bike/route/v1/driving/',
+        walking: 'https://routing.openstreetmap.de/routed-foot/route/v1/driving/'
       };
-      const osrmProfile = osrmProfileMap[profile];
 
-      const routeResponse = await fetch(`https://router.project-osrm.org/route/v1/${osrmProfile}/${originPoint.lng},${originPoint.lat};${destinationPoint.lng},${destinationPoint.lat}?overview=full&geometries=geojson&steps=true`);
+      const baseUrl = baseUrlMap[profile];
+      const coordinates = `${originPoint.lng},${originPoint.lat};${destinationPoint.lng},${destinationPoint.lat}`;
+      
+      const queryParams = `?overview=full&geometries=polyline&steps=true`;
+
+      const routeResponse = await fetch(`${baseUrl}${coordinates}${queryParams}`);
       const routeData = await routeResponse.json();
 
       if (routeData.code !== 'Ok' || !routeData.routes || routeData.routes.length === 0) {
@@ -73,8 +78,14 @@ export const useRouting = () => {
       }
 
       const route = routeData.routes[0];
+
+      if (!route.geometry) {
+        toast({ title: "Error", description: "La API no devolvió una geometría de ruta válida.", variant: "destructive" });
+        return null;
+      }
+
       const routeResult: RouteData = {
-        coordinates: route.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]),
+        coordinates: polyline.decode(route.geometry),
         distance: route.distance,
         duration: route.duration,
         instructions: route.legs[0].steps.map((step: any) => step.maneuver.instruction),
@@ -109,7 +120,6 @@ export const useRouting = () => {
       return null;
     }
   };
-
 
   return { calculateRoute, clearRoute, currentRoute, isCalculating, searchLocation, reverseGeocode, profile, setProfile };
 };

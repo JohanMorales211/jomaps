@@ -4,7 +4,7 @@ import { useRoutingContext } from '@/contexts/RoutingContext';
 import { RouteForm } from './RouteForm';
 import { RouteDetails } from './RouteDetails';
 import { Button } from './ui/button';
-import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from './ui/drawer';
 import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Loader2, PanelLeftClose, PanelLeftOpen, Route } from 'lucide-react';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from './ui/tooltip';
@@ -33,6 +33,7 @@ export function SidePanel() {
           </Button>
         </DrawerTrigger>
         <DrawerContent className="z-[60]"> 
+          <DrawerTitle className="sr-only">Panel de Planificación de Ruta</DrawerTitle>
           <div className="mx-auto w-full max-w-sm">
             {isCalculating ? (
               <div className="flex flex-col items-center justify-center h-48">
