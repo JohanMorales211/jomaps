@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Milestone, X, Car, Bike, PersonStanding } from "lucide-react";
 import { CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
+import { useRoutingContext } from "@/contexts/RoutingContext";
+import { Label } from "./ui/label";
 
 interface RouteDetailsProps {
   route: RouteData;
@@ -12,6 +15,8 @@ interface RouteDetailsProps {
 }
 
 export function RouteDetails({ route, onClear, profile }: RouteDetailsProps) {
+  const { setProfile } = useRoutingContext();
+
   const distanceInKm = (route.distance / 1000).toFixed(1);
 
   const formattedDuration = React.useMemo(() => {
@@ -69,9 +74,31 @@ export function RouteDetails({ route, onClear, profile }: RouteDetailsProps) {
           </div>
         </div>
         <Separator className="my-4" />
+
+        <div className="space-y-2">
+          <Label>Cambiar modo de transporte</Label>
+          <ToggleGroup
+            type="single"
+            value={profile}
+            onValueChange={(newProfile: Profile) => {
+              if (newProfile) setProfile(newProfile);
+            }}
+            className="w-full grid grid-cols-3 gap-2"
+          >
+            <ToggleGroupItem value="driving" aria-label="Vehículo" className="w-full">
+              <Car className="h-5 w-5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="cycling" aria-label="Bicicleta" className="w-full">
+              <Bike className="h-5 w-5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="walking" aria-label="A pie" className="w-full">
+              <PersonStanding className="h-5 w-5" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
       </div>
 
-      <div className="p-6 pt-0">
+      <div className="p-6 pt-0 mt-4">
         <Button onClick={onClear} variant="outline" className="w-full">
           Realizar nueva búsqueda
         </Button>

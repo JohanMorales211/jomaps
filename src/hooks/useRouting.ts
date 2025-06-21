@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import polyline from '@mapbox/polyline';
 
@@ -23,6 +23,16 @@ export const useRouting = () => {
   const [profile, setProfile] = useState<Profile>('driving');
   const { toast } = useToast();
 
+  const [origin, setOrigin] = useState<string>('');
+  const [destination, setDestination] = useState<string>('');
+
+  useEffect(() => {
+    if (currentRoute && origin && destination) {
+      calculateRoute(origin, destination);
+    }
+  }, [profile]);
+
+
   const searchLocation = async (query: string): Promise<RoutePoint | null> => {
     try {
       const response = await fetch(
@@ -45,12 +55,14 @@ export const useRouting = () => {
     }
   };
 
-  const calculateRoute = async (origin: string, destination: string): Promise<RouteData | null> => {
+  const calculateRoute = async (originQuery: string, destinationQuery: string): Promise<RouteData | null> => {
     setIsCalculating(true);
+    setOrigin(originQuery);
+    setDestination(destinationQuery);
     try {
       const [originPoint, destinationPoint] = await Promise.all([
-        searchLocation(origin),
-        searchLocation(destination)
+        searchLocation(originQuery),
+        searchLocation(destinationQuery)
       ]);
 
       if (!originPoint || !destinationPoint) {
@@ -66,7 +78,6 @@ export const useRouting = () => {
 
       const baseUrl = baseUrlMap[profile];
       const coordinates = `${originPoint.lng},${originPoint.lat};${destinationPoint.lng},${destinationPoint.lat}`;
-      
       const queryParams = `?overview=full&geometries=polyline&steps=true`;
 
       const routeResponse = await fetch(`${baseUrl}${coordinates}${queryParams}`);
@@ -92,7 +103,9 @@ export const useRouting = () => {
       };
 
       setCurrentRoute(routeResult);
-      toast({ title: "Ruta Calculada", description: `Distancia: ${(route.distance / 1000).toFixed(1)} km, Tiempo: ${Math.round(route.duration / 60)} min` });
+      if (!isCalculating) { 
+        toast({ title: "Ruta Calculada", description: `Distancia: ${(route.distance / 1000).toFixed(1)} km, Tiempo: ${Math.round(route.duration / 60)} min` });
+      }
       return routeResult;
     } catch (error) {
       console.error('Error calculating route:', error);
@@ -105,6 +118,8 @@ export const useRouting = () => {
 
   const clearRoute = () => {
     setCurrentRoute(null);
+    setOrigin('');
+    setDestination('');
   };
   
   const reverseGeocode = async (lat: number, lng: number): Promise<string | null> => {
