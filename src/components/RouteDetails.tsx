@@ -1,18 +1,40 @@
-import { RouteData } from "@/hooks/useRouting";
+import React from "react";
+import { Profile, RouteData } from "@/hooks/useRouting";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Clock, Route, Milestone, X } from "lucide-react";
+import { Clock, Milestone, X, Car, Bike, PersonStanding } from "lucide-react";
 import { CardDescription, CardHeader, CardTitle } from "./ui/card";
 
 interface RouteDetailsProps {
   route: RouteData;
   onClear: () => void;
+  profile: Profile;
 }
 
-export function RouteDetails({ route, onClear }: RouteDetailsProps) {
+export function RouteDetails({ route, onClear, profile }: RouteDetailsProps) {
   const distanceInKm = (route.distance / 1000).toFixed(1);
-  const durationInMinutes = Math.round(route.duration / 60);
+
+  const formattedDuration = React.useMemo(() => {
+    const totalSeconds = route.duration;
+    if (!totalSeconds) return '0 min';
+
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.round((totalSeconds % 3600) / 60);
+
+    if (hours > 0) {
+      return `${hours} h ${minutes} min`;
+    }
+    return `${minutes} min`;
+  }, [route.duration]);
+
+  const profileInfo = {
+    driving: { icon: Car, label: 'Vehículo' },
+    cycling: { icon: Bike, label: 'Bicicleta' },
+    walking: { icon: PersonStanding, label: 'A pie' }
+  };
+
+  const selectedProfile = profileInfo[profile];
+  const ProfileIcon = selectedProfile.icon;
 
   return (
     <>
@@ -37,20 +59,16 @@ export function RouteDetails({ route, onClear }: RouteDetailsProps) {
           </div>
           <div className="flex flex-col items-center">
             <Clock className="h-6 w-6 text-primary mb-1" />
-            <span className="font-bold">{durationInMinutes} min</span>
+            <span className="font-bold">{formattedDuration}</span>
             <span className="text-xs text-muted-foreground">Duración</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <ProfileIcon className="h-6 w-6 text-primary mb-1" />
+            <span className="font-bold">{selectedProfile.label}</span>
+            <span className="text-xs text-muted-foreground">Modo</span>
           </div>
         </div>
         <Separator className="my-4" />
-        <div className="flex items-center mb-2">
-            <Route className="h-5 w-5 mr-2 text-primary" />
-            <h4 className="font-semibold">Instrucciones</h4>
-        </div>
-        <ScrollArea className="h-40 w-full rounded-md border p-2">
-            <ol className="list-decimal list-inside text-sm space-y-2">
-                {route.instructions.map((instruction, index) => <li key={index}>{instruction}</li>)}
-            </ol>
-        </ScrollArea>
       </div>
 
       <div className="p-6 pt-0">

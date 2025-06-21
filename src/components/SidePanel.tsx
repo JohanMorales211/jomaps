@@ -4,18 +4,17 @@ import { useRoutingContext } from '@/contexts/RoutingContext';
 import { RouteForm } from './RouteForm';
 import { RouteDetails } from './RouteDetails';
 import { Button } from './ui/button';
-import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle, DrawerDescription, DrawerHeader } from './ui/drawer';
+import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer';
 import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
 import { Loader2, PanelLeftClose, PanelLeftOpen, Route } from 'lucide-react';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { cn } from '@/lib/utils'; 
 
 export function SidePanel() {
   const isMobile = useMobile();
   const [isPanelOpen, setPanelOpen] = useState(true);
   const [isMobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-  const { currentRoute, clearRoute, isCalculating } = useRoutingContext();
+  const { currentRoute, clearRoute, isCalculating, profile } = useRoutingContext();
 
   const handleClearRoute = () => {
     clearRoute();
@@ -41,7 +40,7 @@ export function SidePanel() {
                 <p className="mt-4 font-semibold">Calculando ruta...</p>
               </div>
             ) : currentRoute ? (
-              <RouteDetails route={currentRoute} onClear={handleClearRoute} />
+              <RouteDetails route={currentRoute} onClear={handleClearRoute} profile={profile} />
             ) : (
               <>
                 <CardHeader>
@@ -67,7 +66,7 @@ export function SidePanel() {
               <p className="mt-4 font-semibold">Calculando ruta...</p>
             </div>
           ) : currentRoute ? (
-            <RouteDetails route={currentRoute} onClear={handleClearRoute} />
+            <RouteDetails route={currentRoute} onClear={handleClearRoute} profile={profile} />
           ) : (
             <>
               <CardHeader>

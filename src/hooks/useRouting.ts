@@ -14,9 +14,12 @@ export interface RouteData {
   instructions: string[];
 }
 
+export type Profile = 'driving' | 'cycling' | 'walking';
+
 export const useRouting = () => {
   const [isCalculating, setIsCalculating] = useState(false);
   const [currentRoute, setCurrentRoute] = useState<RouteData | null>(null);
+  const [profile, setProfile] = useState<Profile>('driving');
   const { toast } = useToast();
 
   const searchLocation = async (query: string): Promise<RoutePoint | null> => {
@@ -54,11 +57,18 @@ export const useRouting = () => {
         return null;
       }
 
-      const routeResponse = await fetch(`https://router.project-osrm.org/route/v1/driving/${originPoint.lng},${originPoint.lat};${destinationPoint.lng},${destinationPoint.lat}?overview=full&geometries=geojson&steps=true`);
+      const osrmProfileMap = {
+        driving: 'driving',
+        cycling: 'bike',
+        walking: 'foot',
+      };
+      const osrmProfile = osrmProfileMap[profile];
+
+      const routeResponse = await fetch(`https://router.project-osrm.org/route/v1/${osrmProfile}/${originPoint.lng},${originPoint.lat};${destinationPoint.lng},${destinationPoint.lat}?overview=full&geometries=geojson&steps=true`);
       const routeData = await routeResponse.json();
 
       if (routeData.code !== 'Ok' || !routeData.routes || routeData.routes.length === 0) {
-        toast({ title: "Error", description: "No se pudo calcular la ruta", variant: "destructive" });
+        toast({ title: "Error", description: "No se pudo calcular la ruta para este modo de transporte.", variant: "destructive" });
         return null;
       }
 
@@ -101,5 +111,5 @@ export const useRouting = () => {
   };
 
 
-  return { calculateRoute, clearRoute, currentRoute, isCalculating, searchLocation, reverseGeocode };
+  return { calculateRoute, clearRoute, currentRoute, isCalculating, searchLocation, reverseGeocode, profile, setProfile };
 };

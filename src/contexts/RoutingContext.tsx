@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useRouting, RouteData, RoutePoint } from '@/hooks/useRouting';
+import { useRouting, RouteData, RoutePoint, Profile } from '@/hooks/useRouting';
 
 interface RoutingContextProps {
   calculateRoute: (origin: string, destination: string) => Promise<RouteData | null>;
@@ -9,7 +9,9 @@ interface RoutingContextProps {
   searchLocation: (query: string) => Promise<RoutePoint | null>;
   panTo: (coords: [number, number]) => void;
   panTarget: [number, number] | null;
-  reverseGeocode: (lat: number, lng: number) => Promise<string | null>; 
+  reverseGeocode: (lat: number, lng: number) => Promise<string | null>;
+  profile: Profile;
+  setProfile: (profile: Profile) => void;
 }
 
 const RoutingContext = createContext<RoutingContextProps | undefined>(undefined);

@@ -3,14 +3,16 @@ import { useRoutingContext } from "@/contexts/RoutingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MoveRight, Locate, Loader2 } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { MoveRight, Locate, Loader2, Car, Bike, PersonStanding } from "lucide-react";
 import { toast } from "./ui/use-toast";
+import { Profile } from "@/hooks/useRouting";
 
 export function RouteForm() {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [isLocating, setIsLocating] = useState(false);
-  const { calculateRoute, reverseGeocode } = useRoutingContext();
+  const { calculateRoute, reverseGeocode, profile, setProfile } = useRoutingContext();
 
   const handleUseCurrentLocation = () => {
     setIsLocating(true);
@@ -68,6 +70,27 @@ export function RouteForm() {
         <div className="space-y-2">
           <Label htmlFor="destination">Destino</Label>
           <Input id="destination" placeholder="Ej: Medellín, Colombia" value={destination} onChange={(e) => setDestination(e.target.value)} required />
+        </div>
+        <div className="space-y-2">
+          <Label>Modo de transporte</Label>
+          <ToggleGroup
+            type="single"
+            value={profile}
+            onValueChange={(value: Profile) => {
+              if (value) setProfile(value);
+            }}
+            className="w-full grid grid-cols-3 gap-2"
+          >
+            <ToggleGroupItem value="driving" aria-label="Vehículo" className="w-full">
+              <Car className="h-5 w-5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="cycling" aria-label="Bicicleta" className="w-full">
+              <Bike className="h-5 w-5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="walking" aria-label="A pie" className="w-full">
+              <PersonStanding className="h-5 w-5" />
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
       </div>
       <div className="p-6 pt-0">
