@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import polyline from '@mapbox/polyline';
+
+const ORS_API_KEY = import.meta.env.VITE_ORS_API_KEY;
 
 export interface RoutePoint {
   lat: number;
@@ -10,12 +11,18 @@ export interface RoutePoint {
 
 export interface RouteData {
   coordinates: [number, number][];
-  distance: number;
-  duration: number;
+  distance: number; // en metros
+  duration: number; // en segundos
   instructions: string[];
 }
 
 export type Profile = 'driving' | 'cycling' | 'walking';
+
+const profileMap: Record<Profile, string> = {
+  driving: 'driving-car',
+  cycling: 'cycling-regular',
+  walking: 'foot-walking',
+};
 
 export const useRouting = () => {
   const [isCalculating, setIsCalculating] = useState(false);
@@ -23,26 +30,29 @@ export const useRouting = () => {
   const [profile, setProfile] = useState<Profile>('driving');
   const { toast } = useToast();
 
-  const [originQuery, setOriginQuery] = useState<string>('');
-  const [destinationQuery, setDestinationQuery] = useState<string>('');
-
   const [originPoint, setOriginPoint] = useState<RoutePoint | null>(null);
   const [destinationPoint, setDestinationPoint] = useState<RoutePoint | null>(null);
 
   const searchLocation = async (query: string): Promise<RoutePoint | null> => {
+    if (!ORS_API_KEY) {
+      console.error("API Key de OpenRouteService no encontrada. Asegúrate de configurar VITE_ORS_API_KEY en tu .env.local");
+      toast({ title: "Error de Configuración", description: "Falta la API Key del servicio de mapas.", variant: "destructive" });
+      return null;
+    }
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=1`
+        `https://api.openrouteservice.org/geocode/search?api_key=${ORS_API_KEY}&text=${encodeURIComponent(query)}&size=1`
       );
       if (!response.ok) throw new Error('Error de red al buscar ubicación');
       const data = await response.json();
       
-      if (data && data.length > 0) {
-        const result = data[0];
+      if (data && data.features && data.features.length > 0) {
+        const result = data.features[0];
+        const [lng, lat] = result.geometry.coordinates;
         return {
-          lat: parseFloat(result.lat),
-          lng: parseFloat(result.lon),
-          name: result.display_name
+          lat: lat,
+          lng: lng,
+          name: result.properties.label
         };
       }
       return null;
@@ -53,41 +63,34 @@ export const useRouting = () => {
   };
 
   const fetchRoute = useCallback(async (start: RoutePoint, end: RoutePoint) => {
-    const baseUrlMap = {
-      driving: 'https://routing.openstreetmap.de/routed-car/route/v1/driving/',
-      cycling: 'https://routing.openstreetmap.de/routed-bike/route/v1/driving/',
-      walking: 'https://routing.openstreetmap.de/routed-foot/route/v1/driving/'
-    };
-
-    const baseUrl = baseUrlMap[profile];
-    const coordinates = `${start.lng},${start.lat};${end.lng},${end.lat}`;
-    const queryParams = `?overview=full&geometries=polyline&steps=true`;
+    const orsProfile = profileMap[profile];
+    const url = `https://api.openrouteservice.org/v2/directions/${orsProfile}?api_key=${ORS_API_KEY}&start=${start.lng},${start.lat}&end=${end.lng},${end.lat}`;
 
     try {
-      const routeResponse = await fetch(`${baseUrl}${coordinates}${queryParams}`);
+      const routeResponse = await fetch(url);
       if (!routeResponse.ok) throw new Error('No se pudo calcular la ruta');
       const routeData = await routeResponse.json();
 
-      if (routeData.code !== 'Ok' || !routeData.routes || routeData.routes.length === 0 || !routeData.routes[0].geometry) {
+      if (!routeData.features || routeData.features.length === 0) {
         toast({ title: "Error", description: "No se pudo calcular la ruta para este modo de transporte.", variant: "destructive" });
         return null;
       }
       
-      const route = routeData.routes[0];
+      const route = routeData.features[0];
       const routeResult: RouteData = {
-        coordinates: polyline.decode(route.geometry),
-        distance: route.distance,
-        duration: route.duration,
-        instructions: route.legs[0].steps.map((step: any) => step.maneuver.instruction),
+        coordinates: route.geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]]),
+        distance: route.properties.summary.distance,
+        duration: route.properties.summary.duration,
+        instructions: route.properties.segments[0].steps.map((step: any) => step.instruction),
       };
       
       setCurrentRoute(routeResult);
-      toast({ title: "Ruta Actualizada", description: `Modo: ${profile}. Distancia: ${(route.distance / 1000).toFixed(1)} km` });
+      toast({ title: "Ruta Actualizada", description: `Modo: ${profile}. Distancia: ${(routeResult.distance / 1000).toFixed(1)} km` });
       return routeResult;
 
     } catch (error) {
       console.error('Error fetching route:', error);
-      toast({ title: "Error de Red", description: "Error al calcular la ruta", variant: "destructive" });
+      toast({ title: "Error de Red", description: "Error al calcular la ruta con OpenRouteService", variant: "destructive" });
       return null;
     }
   }, [profile, toast]);
@@ -97,12 +100,10 @@ export const useRouting = () => {
       setIsCalculating(true);
       fetchRoute(originPoint, destinationPoint).finally(() => setIsCalculating(false));
     }
-  }, [profile, fetchRoute]);
+  }, [profile]);
 
   const calculateRoute = async (origin: string, destination: string): Promise<RouteData | null> => {
     setIsCalculating(true);
-    setOriginQuery(origin);
-    setDestinationQuery(destination);
 
     try {
       const [startPoint, endPoint] = await Promise.all([
@@ -130,17 +131,18 @@ export const useRouting = () => {
 
   const clearRoute = () => {
     setCurrentRoute(null);
-    setOriginQuery('');
-    setDestinationQuery('');
     setOriginPoint(null);
     setDestinationPoint(null);
   };
   
   const reverseGeocode = async (lat: number, lng: number): Promise<string | null> => {
     try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+      const response = await fetch(`https://api.openrouteservice.org/geocode/reverse?api_key=${ORS_API_KEY}&point.lon=${lng}&point.lat=${lat}`);
       const data = await response.json();
-      return data?.display_name || null;
+      if (data && data.features && data.features.length > 0) {
+        return data.features[0].properties.label;
+      }
+      return null;
     } catch (error) {
       console.error('Error in reverse geocoding:', error);
       return null;
