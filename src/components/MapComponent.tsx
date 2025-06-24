@@ -68,7 +68,6 @@ const RouteTooltip = () => {
   );
 };
 
-
 const MyLocationButton = () => {
   const map = useMap();
   const [position, setPosition] = useState<LatLngExpression | null>(null);
@@ -95,17 +94,16 @@ const MyLocationButton = () => {
 
   return (
     <>
-      <div className="leaflet-bottom leaflet-right mb-12">
-        <div className="leaflet-control leaflet-bar">
-          <Button
-            onClick={handleLocate}
-            size="icon"
-            className="w-10 h-10 bg-card hover:bg-muted"
-          >
-            <LocateFixed className="h-5 w-5 text-primary" />
-          </Button>
-        </div>
+      <div className="absolute bottom-24 md:bottom-6 right-4 z-[400]">
+        <Button
+          onClick={handleLocate}
+          aria-label="Ubicar mi posición actual"
+          className="w-14 h-14 rounded-full shadow-lg bg-card/90 backdrop-blur-sm hover:bg-muted/90"
+        >
+          <LocateFixed className="h-7 w-7 text-primary" />
+        </Button>
       </div>
+      
       {position && (
         <Marker position={position} icon={userIcon}>
           <Popup>Estás aquí</Popup>
@@ -137,7 +135,7 @@ const MapEvents = () => {
 
 export function MapComponent() {
   const { currentRoute } = useRoutingContext();
-  const defaultPosition: LatLngExpression = [4.5709, -74.2973]; // Centro de Colombia
+  const defaultPosition: LatLngExpression = [4.5709, -74.2973];
   const defaultZoom = 6; 
 
   return (
