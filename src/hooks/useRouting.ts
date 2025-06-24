@@ -11,12 +11,14 @@ export interface RoutePoint {
 
 export interface RouteData {
   coordinates: [number, number][];
-  distance: number; // en metros
-  duration: number; // en segundos
+  distance: number;
+  duration: number;
   instructions: string[];
 }
 
 export type Profile = 'driving' | 'cycling' | 'walking';
+
+export type RouteBounds = [[number, number], [number, number]];
 
 const profileMap: Record<Profile, string> = {
   driving: 'driving-car',
@@ -32,6 +34,8 @@ export const useRouting = () => {
 
   const [originPoint, setOriginPoint] = useState<RoutePoint | null>(null);
   const [destinationPoint, setDestinationPoint] = useState<RoutePoint | null>(null);
+
+  const [routeBounds, setRouteBounds] = useState<RouteBounds | null>(null);
 
   const searchLocation = async (query: string): Promise<RoutePoint | null> => {
     if (!ORS_API_KEY) {
@@ -77,8 +81,13 @@ export const useRouting = () => {
       }
       
       const route = routeData.features[0];
+      const coordinates: [number, number][] = route.geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]]);
+
+      const [minLng, minLat, maxLng, maxLat] = route.bbox;
+      setRouteBounds([[minLat, minLng], [maxLat, maxLng]]);
+
       const routeResult: RouteData = {
-        coordinates: route.geometry.coordinates.map((coord: number[]) => [coord[1], coord[0]]),
+        coordinates: coordinates,
         distance: route.properties.summary.distance,
         duration: route.properties.summary.duration,
         instructions: route.properties.segments[0].steps.map((step: any) => step.instruction),
@@ -104,21 +113,17 @@ export const useRouting = () => {
 
   const calculateRoute = async (origin: string, destination: string): Promise<RouteData | null> => {
     setIsCalculating(true);
-
     try {
       const [startPoint, endPoint] = await Promise.all([
         searchLocation(origin),
         searchLocation(destination)
       ]);
-
       if (!startPoint || !endPoint) {
         toast({ title: "Error de Ubicación", description: "No se pudieron encontrar una o ambas ubicaciones. Intenta ser más específico.", variant: "destructive" });
         return null;
       }
-
       setOriginPoint(startPoint);
       setDestinationPoint(endPoint);
-
       return await fetchRoute(startPoint, endPoint);
     } catch (error) {
       console.error('Error calculating route:', error);
@@ -133,6 +138,7 @@ export const useRouting = () => {
     setCurrentRoute(null);
     setOriginPoint(null);
     setDestinationPoint(null);
+    setRouteBounds(null);
   };
   
   const reverseGeocode = async (lat: number, lng: number): Promise<string | null> => {
@@ -149,5 +155,5 @@ export const useRouting = () => {
     }
   };
 
-  return { calculateRoute, clearRoute, currentRoute, isCalculating, searchLocation, reverseGeocode, profile, setProfile };
+  return { calculateRoute, clearRoute, currentRoute, isCalculating, searchLocation, reverseGeocode, profile, setProfile, routeBounds };
 };

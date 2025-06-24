@@ -20,7 +20,7 @@ const RouteTooltip = () => {
     if (!coords || coords.length === 0) return null;
     const midIndex = Math.floor(coords.length / 2);
     return coords[midIndex] as LatLngExpression;
-  }, [currentRoute]);
+  }, [currentRoute.coordinates]);
 
   const formattedDuration = useMemo(() => {
     const totalSeconds = currentRoute.duration;
@@ -42,6 +42,7 @@ const RouteTooltip = () => {
   
   const invisibleIcon = L.divIcon({
     className: 'custom-hidden-marker-icon',
+    html: '',
     iconSize: [0, 0] 
   });
 
@@ -117,7 +118,7 @@ const MyLocationButton = () => {
 
 const MapEvents = () => {
     const map = useMap();
-    const { panTarget } = useRoutingContext();
+    const { panTarget, routeBounds } = useRoutingContext();
 
     useEffect(() => {
         if (panTarget) {
@@ -125,12 +126,18 @@ const MapEvents = () => {
         }
     }, [panTarget, map]);
 
+    useEffect(() => {
+        if (routeBounds) {
+            map.fitBounds(routeBounds, { padding: [50, 50] });
+        }
+    }, [routeBounds, map]);
+
     return null;
 }
 
 export function MapComponent() {
   const { currentRoute } = useRoutingContext();
-  const defaultPosition: LatLngExpression = [4.5709, -74.2973]; 
+  const defaultPosition: LatLngExpression = [4.5709, -74.2973]; // Centro de Colombia
   const defaultZoom = 6; 
 
   return (
@@ -148,7 +155,7 @@ export function MapComponent() {
         />
       )}
       
-      <RouteTooltip />
+      {currentRoute && <RouteTooltip />}
       
       <MapEvents />
       <MyLocationButton />
