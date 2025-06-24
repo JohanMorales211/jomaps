@@ -48,7 +48,9 @@ export function SidePanel() {
                   <CardTitle>Calcular Ruta</CardTitle>
                   <CardDescription>Introduce un punto de origen y destino.</CardDescription>
                 </CardHeader>
-                <RouteForm />
+                <RouteForm 
+                  onCalculationStart={() => setMobileDrawerOpen(false)}
+                />
               </>
             )}
           </div>

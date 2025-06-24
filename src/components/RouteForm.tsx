@@ -8,7 +8,11 @@ import { MoveRight, Locate, Loader2, Car, Bike, PersonStanding } from "lucide-re
 import { toast } from "./ui/use-toast";
 import { Profile } from "@/hooks/useRouting";
 
-export function RouteForm() {
+interface RouteFormProps {
+  onCalculationStart?: () => void;
+}
+
+export function RouteForm({ onCalculationStart }: RouteFormProps) {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [isLocating, setIsLocating] = useState(false);
@@ -43,6 +47,8 @@ export function RouteForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (origin && destination) {
+      onCalculationStart?.();
+      
       calculateRoute(origin, destination);
     }
   };
