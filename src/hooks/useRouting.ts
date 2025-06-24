@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import polyline from '@mapbox/polyline';
 
@@ -23,21 +23,18 @@ export const useRouting = () => {
   const [profile, setProfile] = useState<Profile>('driving');
   const { toast } = useToast();
 
-  const [origin, setOrigin] = useState<string>('');
-  const [destination, setDestination] = useState<string>('');
+  const [originQuery, setOriginQuery] = useState<string>('');
+  const [destinationQuery, setDestinationQuery] = useState<string>('');
 
-  useEffect(() => {
-    if (currentRoute && origin && destination) {
-      calculateRoute(origin, destination);
-    }
-  }, [profile]);
-
+  const [originPoint, setOriginPoint] = useState<RoutePoint | null>(null);
+  const [destinationPoint, setDestinationPoint] = useState<RoutePoint | null>(null);
 
   const searchLocation = async (query: string): Promise<RoutePoint | null> => {
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=1`
       );
+      if (!response.ok) throw new Error('Error de red al buscar ubicación');
       const data = await response.json();
       
       if (data && data.length > 0) {
@@ -55,61 +52,76 @@ export const useRouting = () => {
     }
   };
 
-  const calculateRoute = async (originQuery: string, destinationQuery: string): Promise<RouteData | null> => {
-    setIsCalculating(true);
-    setOrigin(originQuery);
-    setDestination(destinationQuery);
+  const fetchRoute = useCallback(async (start: RoutePoint, end: RoutePoint) => {
+    const baseUrlMap = {
+      driving: 'https://routing.openstreetmap.de/routed-car/route/v1/driving/',
+      cycling: 'https://routing.openstreetmap.de/routed-bike/route/v1/driving/',
+      walking: 'https://routing.openstreetmap.de/routed-foot/route/v1/driving/'
+    };
+
+    const baseUrl = baseUrlMap[profile];
+    const coordinates = `${start.lng},${start.lat};${end.lng},${end.lat}`;
+    const queryParams = `?overview=full&geometries=polyline&steps=true`;
+
     try {
-      const [originPoint, destinationPoint] = await Promise.all([
-        searchLocation(originQuery),
-        searchLocation(destinationQuery)
-      ]);
-
-      if (!originPoint || !destinationPoint) {
-        toast({ title: "Error", description: "No se pudieron encontrar una o ambas ubicaciones", variant: "destructive" });
-        return null;
-      }
-
-      const baseUrlMap = {
-        driving: 'https://routing.openstreetmap.de/routed-car/route/v1/driving/',
-        cycling: 'https://routing.openstreetmap.de/routed-bike/route/v1/driving/',
-        walking: 'https://routing.openstreetmap.de/routed-foot/route/v1/driving/'
-      };
-
-      const baseUrl = baseUrlMap[profile];
-      const coordinates = `${originPoint.lng},${originPoint.lat};${destinationPoint.lng},${destinationPoint.lat}`;
-      const queryParams = `?overview=full&geometries=polyline&steps=true`;
-
       const routeResponse = await fetch(`${baseUrl}${coordinates}${queryParams}`);
+      if (!routeResponse.ok) throw new Error('No se pudo calcular la ruta');
       const routeData = await routeResponse.json();
 
-      if (routeData.code !== 'Ok' || !routeData.routes || routeData.routes.length === 0) {
+      if (routeData.code !== 'Ok' || !routeData.routes || routeData.routes.length === 0 || !routeData.routes[0].geometry) {
         toast({ title: "Error", description: "No se pudo calcular la ruta para este modo de transporte.", variant: "destructive" });
         return null;
       }
-
+      
       const route = routeData.routes[0];
-
-      if (!route.geometry) {
-        toast({ title: "Error", description: "La API no devolvió una geometría de ruta válida.", variant: "destructive" });
-        return null;
-      }
-
       const routeResult: RouteData = {
         coordinates: polyline.decode(route.geometry),
         distance: route.distance,
         duration: route.duration,
         instructions: route.legs[0].steps.map((step: any) => step.maneuver.instruction),
       };
-
+      
       setCurrentRoute(routeResult);
-      if (!isCalculating) { 
-        toast({ title: "Ruta Calculada", description: `Distancia: ${(route.distance / 1000).toFixed(1)} km, Tiempo: ${Math.round(route.duration / 60)} min` });
-      }
+      toast({ title: "Ruta Actualizada", description: `Modo: ${profile}. Distancia: ${(route.distance / 1000).toFixed(1)} km` });
       return routeResult;
+
+    } catch (error) {
+      console.error('Error fetching route:', error);
+      toast({ title: "Error de Red", description: "Error al calcular la ruta", variant: "destructive" });
+      return null;
+    }
+  }, [profile, toast]);
+
+  useEffect(() => {
+    if (currentRoute && originPoint && destinationPoint) {
+      setIsCalculating(true);
+      fetchRoute(originPoint, destinationPoint).finally(() => setIsCalculating(false));
+    }
+  }, [profile, fetchRoute]);
+
+  const calculateRoute = async (origin: string, destination: string): Promise<RouteData | null> => {
+    setIsCalculating(true);
+    setOriginQuery(origin);
+    setDestinationQuery(destination);
+
+    try {
+      const [startPoint, endPoint] = await Promise.all([
+        searchLocation(origin),
+        searchLocation(destination)
+      ]);
+
+      if (!startPoint || !endPoint) {
+        toast({ title: "Error de Ubicación", description: "No se pudieron encontrar una o ambas ubicaciones. Intenta ser más específico.", variant: "destructive" });
+        return null;
+      }
+
+      setOriginPoint(startPoint);
+      setDestinationPoint(endPoint);
+
+      return await fetchRoute(startPoint, endPoint);
     } catch (error) {
       console.error('Error calculating route:', error);
-      toast({ title: "Error de Red", description: "Error al calcular la ruta", variant: "destructive" });
+      toast({ title: "Error General", description: "Ocurrió un error inesperado al calcular la ruta.", variant: "destructive" });
       return null;
     } finally {
       setIsCalculating(false);
@@ -118,18 +130,17 @@ export const useRouting = () => {
 
   const clearRoute = () => {
     setCurrentRoute(null);
-    setOrigin('');
-    setDestination('');
+    setOriginQuery('');
+    setDestinationQuery('');
+    setOriginPoint(null);
+    setDestinationPoint(null);
   };
   
   const reverseGeocode = async (lat: number, lng: number): Promise<string | null> => {
     try {
       const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
       const data = await response.json();
-      if (data && data.display_name) {
-        return data.display_name;
-      }
-      return null;
+      return data?.display_name || null;
     } catch (error) {
       console.error('Error in reverse geocoding:', error);
       return null;
