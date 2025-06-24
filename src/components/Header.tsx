@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMobile } from '@/hooks/use-mobile';
-import { MapPin, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -45,8 +45,12 @@ export function Header() {
   if (!isMobile) {
     return (
       <header className="bg-card border-b shadow-sm w-full h-16 flex items-center px-6 z-30">
-        <div className="flex items-center gap-2">
-          <MapPin className="h-6 w-6 text-primary" />
+        <div className="flex items-center gap-3">
+          <img 
+            src="/solo_logo.png"
+            alt="Logo de Jomaps" 
+            className="h-8 w-8 object-contain"
+          />
           <h1 className="text-xl font-bold text-foreground">Jomaps</h1>
         </div>
         <div className="flex-grow flex justify-center">
@@ -79,6 +83,7 @@ export function Header() {
     );
   }
 
+  // Vista móvil
   return (
     <header className="bg-card border-b shadow-sm w-full h-16 flex items-center px-4 z-30">
       {isSearchActive ? (
@@ -99,8 +104,12 @@ export function Header() {
         </div>
       ) : (
         <div className="w-full flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-6 w-6 text-primary" />
+          <div className="flex items-center gap-3">
+            <img 
+              src="/solo_logo.png"
+              alt="Logo de Jomaps" 
+              className="h-8 w-8 object-contain"
+            />
             <h1 className="text-xl font-bold text-foreground">Jomaps</h1>
           </div>
           <Button variant="ghost" size="icon" onClick={() => setIsSearchActive(true)}>
