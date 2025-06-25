@@ -1,23 +1,22 @@
 import React, { useMemo } from "react";
-import { Profile, RouteData } from "@/features/routing/hooks/useRouting";
+import { Profile, RouteData } from "@/features/routing/types";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Milestone, X, Car, Bike, PersonStanding, Mountain } from "lucide-react";
-import { CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
-import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/toggle-group";
-import { useRoutingContext } from "@/features/routing/context/RoutingContext";
-import { Label } from "../../../components/ui/label";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useRoutingContext } from "../context/RoutingContext";
+import { Label } from "@/components/ui/label";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 interface RouteDetailsProps {
   route: RouteData;
   onClear: () => void;
-  profile: Profile;
 }
 
-export function RouteDetails({ route, onClear, profile }: RouteDetailsProps) {
-  const { setProfile } = useRoutingContext();
+export function RouteDetails({ route, onClear }: RouteDetailsProps) {
+  const { profile, setProfile } = useRoutingContext();
 
   const distanceInKm = ((route.distance ?? 0) / 1000).toFixed(1);
 
@@ -65,7 +64,7 @@ export function RouteDetails({ route, onClear, profile }: RouteDetailsProps) {
         </div>
         <Separator className="my-4" />
         
-        {route.elevationProfile && route.elevationProfile.length > 0 && (
+        {chartData.length > 0 && (
           <div className="space-y-2 mb-6">
             <Label className="text-base font-semibold flex items-center gap-2"><Mountain className="h-5 w-5"/> Perfil de Altitud</Label>
             <div className="h-40 w-full">

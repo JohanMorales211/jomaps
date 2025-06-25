@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { useMobile } from '@/hooks/use-mobile';
-import { useRoutingContext } from '@/features/routing/context/RoutingContext';
+import { useRoutingContext } from '../context/RoutingContext';
 import { RouteForm } from './RouteForm';
 import { RouteDetails } from './RouteDetails';
-import { Button } from '../../../components/ui/button';
-import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from '../../../components/ui/drawer';
-import { Card, CardHeader, CardTitle, CardDescription } from '../../../components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from '@/components/ui/drawer';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, PanelLeftClose, PanelLeftOpen, Route } from 'lucide-react';
-import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function SidePanel() {
   const isMobile = useMobile();
   const [isPanelOpen, setPanelOpen] = useState(true);
   const [isMobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-  const { currentRoute, clearRoute, isCalculating, profile } = useRoutingContext();
+  const { currentRoute, clearRoute, isCalculating } = useRoutingContext();
 
   const handleClearRoute = () => {
     clearRoute();
@@ -41,7 +41,7 @@ export function SidePanel() {
                 <p className="mt-4 font-semibold">Calculando ruta...</p>
               </div>
             ) : currentRoute ? (
-              <RouteDetails route={currentRoute} onClear={handleClearRoute} profile={profile} />
+              <RouteDetails route={currentRoute} onClear={handleClearRoute} />
             ) : (
               <>
                 <CardHeader>
@@ -49,7 +49,7 @@ export function SidePanel() {
                   <CardDescription>Introduce un punto de origen y destino.</CardDescription>
                 </CardHeader>
                 <RouteForm 
-                  onCalculationStart={() => setMobileDrawerOpen(false)}
+                  onCalculationStart={() => setMobileDrawerOpen(true)}
                 />
               </>
             )}
@@ -69,7 +69,7 @@ export function SidePanel() {
               <p className="mt-4 font-semibold">Calculando ruta...</p>
             </div>
           ) : currentRoute ? (
-            <RouteDetails route={currentRoute} onClear={handleClearRoute} profile={profile} />
+            <RouteDetails route={currentRoute} onClear={handleClearRoute} />
           ) : (
             <>
               <CardHeader>

@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useRouting, RouteData, RoutePoint, Profile, RouteBounds, AutocompleteSuggestion } from '@/features/routing/hooks/useRouting';
+import { useRouting } from '../hooks/useRouting';
+import { RouteData, RoutePoint, Profile, RouteBounds, AutocompleteSuggestion } from '../types';
 
 interface RoutingContextProps {
-  calculateRoute: (origin: string, destination: string) => Promise<RouteData | null>;
+  calculateRoute: (origin: string, destination: string) => Promise<void>;
   clearRoute: () => void;
   currentRoute: RouteData | null;
   isCalculating: boolean;
@@ -19,7 +20,7 @@ interface RoutingContextProps {
 const RoutingContext = createContext<RoutingContextProps | undefined>(undefined);
 
 export const RoutingProvider = ({ children }: { children: ReactNode }) => {
-  const routing = useRouting();
+  const routingState = useRouting();
   const [panTarget, setPanTarget] = useState<[number, number] | null>(null);
 
   const panTo = (coords: [number, number]) => {
@@ -27,7 +28,7 @@ export const RoutingProvider = ({ children }: { children: ReactNode }) => {
     setTimeout(() => setPanTarget(null), 50);
   };
 
-  const value = { ...routing, panTo, panTarget };
+  const value = { ...routingState, panTo, panTarget };
 
   return (
     <RoutingContext.Provider value={value}>
