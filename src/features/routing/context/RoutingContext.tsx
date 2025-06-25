@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { useRouting, RouteData, RoutePoint, Profile, RouteBounds, AutocompleteSuggestion } from '@/hooks/useRouting';
+import { useRouting, RouteData, RoutePoint, Profile, RouteBounds, AutocompleteSuggestion } from '@/features/routing/hooks/useRouting';
 
 interface RoutingContextProps {
   calculateRoute: (origin: string, destination: string) => Promise<RouteData | null>;

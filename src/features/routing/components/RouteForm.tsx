@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useRoutingContext } from "@/contexts/RoutingContext";
+import { useRoutingContext } from "../context/RoutingContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { toast } from "@/hooks/use-toast";
 import { MoveRight, Locate, Loader2, Car, Bike, PersonStanding } from "lucide-react";
-import { toast } from "./ui/use-toast";
-import { Profile } from "@/hooks/useRouting";
-import { AutocompleteInput } from './ui/AutocompleteInput'; 
+import { Profile } from "../types";
+import { AutocompleteInput } from './AutocompleteInput'; 
 
 interface RouteFormProps {
   onCalculationStart?: () => void;
@@ -16,25 +16,34 @@ export function RouteForm({ onCalculationStart }: RouteFormProps) {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [isLocating, setIsLocating] = useState(false);
-  const { calculateRoute, reverseGeocode, profile, setProfile } = useRoutingContext();
+  
+  const { calculateRoute, reverseGeocode, autocompleteSearch, profile, setProfile } = useRoutingContext();
 
   const handleUseCurrentLocation = () => {
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        const address = await reverseGeocode(latitude, longitude);
-        if (address) {
-          setOrigin(address);
-          toast({ title: "Ubicación encontrada", description: "Origen actualizado." });
-        } else {
-          setOrigin(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
-          toast({ title: "Ubicación encontrada", description: "Coordenadas capturadas." });
+        try {
+          const address = await reverseGeocode(latitude, longitude);
+          if (address) {
+            setOrigin(address);
+            toast({ title: "Ubicación encontrada", description: "Origen actualizado." });
+          } else {
+            setOrigin(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+            toast({ title: "Ubicación encontrada", description: "Coordenadas capturadas." });
+          }
+        } catch (error) {
+          toast({ title: "Error", description: "No se pudo obtener el nombre de la ubicación.", variant: "destructive" });
+        } finally {
+          setIsLocating(false);
         }
-        setIsLocating(false);
       },
       (error) => {
-        toast({ title: "Error de ubicación", description: error.message === "User denied Geolocation" ? "Permiso denegado." : "No se pudo obtener tu ubicación.", variant: "destructive" });
+        const errorMessage = error.code === error.PERMISSION_DENIED 
+          ? "Permiso de ubicación denegado." 
+          : "No se pudo obtener tu ubicación.";
+        toast({ title: "Error de ubicación", description: errorMessage, variant: "destructive" });
         setIsLocating(false);
       }
     );
@@ -43,8 +52,10 @@ export function RouteForm({ onCalculationStart }: RouteFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (origin && destination) {
-      onCalculationStart?.();
+      onCalculationStart?.(); 
       calculateRoute(origin, destination);
+    } else {
+      toast({ title: "Campos incompletos", description: "Por favor, introduce un origen y un destino.", variant: "destructive"})
     }
   };
 
@@ -65,6 +76,7 @@ export function RouteForm({ onCalculationStart }: RouteFormProps) {
             value={origin}
             onValueChange={setOrigin}
             onSuggestionSelect={(suggestion) => setOrigin(suggestion.name)}
+            fetchSuggestions={autocompleteSearch}
             required
             disabled={isLocating}
           />
@@ -77,15 +89,22 @@ export function RouteForm({ onCalculationStart }: RouteFormProps) {
             value={destination}
             onValueChange={setDestination}
             onSuggestionSelect={(suggestion) => setDestination(suggestion.name)}
+            fetchSuggestions={autocompleteSearch}
             required
           />
         </div>
         <div className="space-y-2">
           <Label>Modo de transporte</Label>
           <ToggleGroup type="single" value={profile} onValueChange={(value: Profile) => { if (value) setProfile(value); }} className="w-full grid grid-cols-3 gap-2">
-            <ToggleGroupItem value="driving" aria-label="Vehículo" className="w-full"><Car className="h-5 w-5" /></ToggleGroupItem>
-            <ToggleGroupItem value="cycling" aria-label="Bicicleta" className="w-full"><Bike className="h-5 w-5" /></ToggleGroupItem>
-            <ToggleGroupItem value="walking" aria-label="A pie" className="w-full"><PersonStanding className="h-5 w-5" /></ToggleGroupItem>
+            <ToggleGroupItem value="driving" aria-label="Vehículo" className="w-full flex items-center gap-2">
+              <Car className="h-5 w-5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="cycling" aria-label="Bicicleta" className="w-full flex items-center gap-2">
+              <Bike className="h-5 w-5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="walking" aria-label="A pie" className="w-full flex items-center gap-2">
+              <PersonStanding className="h-5 w-5" />
+            </ToggleGroupItem>
           </ToggleGroup>
         </div>
       </div>

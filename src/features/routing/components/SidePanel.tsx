@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useMobile } from '@/hooks/use-mobile';
-import { useRoutingContext } from '@/contexts/RoutingContext';
+import { useRoutingContext } from '@/features/routing/context/RoutingContext';
 import { RouteForm } from './RouteForm';
 import { RouteDetails } from './RouteDetails';
-import { Button } from './ui/button';
-import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from './ui/drawer';
-import { Card, CardHeader, CardTitle, CardDescription } from './ui/card';
+import { Button } from '../../../components/ui/button';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from '../../../components/ui/drawer';
+import { Card, CardHeader, CardTitle, CardDescription } from '../../../components/ui/card';
 import { Loader2, PanelLeftClose, PanelLeftOpen, Route } from 'lucide-react';
-import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '../../../components/ui/tooltip';
 
 export function SidePanel() {
   const isMobile = useMobile();

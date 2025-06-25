@@ -1,38 +1,49 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
-import { useRoutingContext } from '@/contexts/RoutingContext';
 import { Loader2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { AutocompleteSuggestion } from '../types';
 
-export const AutocompleteInput = ({ value, onValueChange, onSuggestionSelect, ...props }) => {
-  const { autocompleteSearch } = useRoutingContext();
-  const [suggestions, setSuggestions] = useState([]);
+interface AutocompleteInputProps extends Omit<React.ComponentProps<typeof Input>, 'value' | 'onChange'> {
+  value: string;
+  onValueChange: (value: string) => void;
+  onSuggestionSelect: (suggestion: AutocompleteSuggestion) => void;
+  fetchSuggestions: (query: string) => Promise<AutocompleteSuggestion[]>;
+}
+
+export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({ 
+  value, 
+  onValueChange, 
+  onSuggestionSelect, 
+  fetchSuggestions,
+  ...props 
+}) => {
+  const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   
-  const containerRef = useRef(null);
-  const inputRef = useRef(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const debounce = useCallback((func, delay) => {
-    let timeoutId;
-    return (...args) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => { func(...args); }, delay);
-    };
-  }, []);
-
-  const fetchSuggestions = async (query) => {
-    if (query.length < 3) {
-      setSuggestions([]);
-      return;
-    }
-    setIsLoading(true);
-    const results = await autocompleteSearch(query);
-    setSuggestions(results);
-    setIsLoading(false);
-  };
-
-  const debouncedFetch = useCallback(debounce(fetchSuggestions, 300), []);
+  const debouncedFetch = useCallback(
+    ((func: (query: string) => void, delay: number) => {
+      let timeoutId: NodeJS.Timeout;
+      return (query: string) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => { func(query); }, delay);
+      };
+    })(async (query) => {
+      if (query.length < 3) {
+        setSuggestions([]);
+        return;
+      }
+      setIsLoading(true);
+      const results = await fetchSuggestions(query);
+      setSuggestions(results);
+      setIsLoading(false);
+    }, 300),
+    [fetchSuggestions]
+  );
 
   useEffect(() => {
     if (value && isFocused) {
@@ -43,8 +54,8 @@ export const AutocompleteInput = ({ value, onValueChange, onSuggestionSelect, ..
   }, [value, isFocused, debouncedFetch]);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsFocused(false);
       }
     };
@@ -52,7 +63,7 @@ export const AutocompleteInput = ({ value, onValueChange, onSuggestionSelect, ..
     return () => { document.removeEventListener("mousedown", handleClickOutside); };
   }, []);
 
-  const handleSelect = (suggestion) => {
+  const handleSelect = (suggestion: AutocompleteSuggestion) => {
     onSuggestionSelect(suggestion);
     setSuggestions([]);
     setIsFocused(false);

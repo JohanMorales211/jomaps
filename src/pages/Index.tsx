@@ -1,6 +1,6 @@
-import { Header } from "@/components/Header";
-import { MapComponent } from "@/components/MapComponent";
-import { SidePanel } from "@/components/SidePanel";
+import { Header } from "@/components/layout/Header";
+import { MapComponent } from "@/components/map/MapComponent";
+import { SidePanel } from "@/features/routing/components/SidePanel";
 
 export function Index() {
   return (

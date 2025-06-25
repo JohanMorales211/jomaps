@@ -1,12 +1,12 @@
 import React, { useMemo } from "react";
-import { Profile, RouteData } from "@/hooks/useRouting";
+import { Profile, RouteData } from "@/features/routing/hooks/useRouting";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Clock, Milestone, X, Car, Bike, PersonStanding, Mountain } from "lucide-react";
-import { CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
-import { useRoutingContext } from "@/contexts/RoutingContext";
-import { Label } from "./ui/label";
+import { CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "../../../components/ui/toggle-group";
+import { useRoutingContext } from "@/features/routing/context/RoutingContext";
+import { Label } from "../../../components/ui/label";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 

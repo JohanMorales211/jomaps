@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Index } from './pages/Index';
-import { RoutingProvider } from './contexts/RoutingContext';
+import { RoutingProvider } from './features/routing/context/RoutingContext';
 import { Toaster } from "@/components/ui/toaster";
 
 function App() {

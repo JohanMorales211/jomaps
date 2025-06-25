@@ -1,12 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Polyline, Marker, useMap, Popup, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useRoutingContext } from '@/contexts/RoutingContext';
-import { useEffect, useState } from 'react';
 import L, { LatLngExpression, Icon } from 'leaflet';
-import { Button } from './ui/button';
+import { useRoutingContext } from '@/features/routing/context/RoutingContext';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 import { LocateFixed, Car, Bike, PersonStanding } from 'lucide-react';
-import { toast } from './ui/use-toast';
 
 const RouteTooltip = () => {
   const { currentRoute, profile } = useRoutingContext();
@@ -112,7 +111,6 @@ const MyLocationButton = () => {
     </>
   );
 };
-
 
 const MapEvents = () => {
     const map = useMap();

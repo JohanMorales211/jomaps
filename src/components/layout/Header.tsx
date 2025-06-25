@@ -3,10 +3,10 @@ import { useMobile } from '@/hooks/use-mobile';
 import { Search, X, Github, Linkedin, Globe, MoreVertical, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useRoutingContext } from '@/contexts/RoutingContext';
-import { toast } from '@/components/ui/use-toast';
+import { useRoutingContext } from '@/features/routing/context/RoutingContext';
+import { toast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { AutocompleteInput } from './ui/AutocompleteInput';
+import { AutocompleteInput } from '@/features/routing/components/AutocompleteInput';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
@@ -14,7 +14,7 @@ export function Header() {
   const isMobile = useMobile();
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [query, setQuery] = useState('');
-  const { searchLocation, panTo } = useRoutingContext();
+  const { searchLocation, panTo, autocompleteSearch } = useRoutingContext();
 
   const [isNoticeOpen, setIsNoticeOpen] = useState(false);
 
@@ -23,7 +23,7 @@ export function Header() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleSearch = async (searchQuery) => {
+  const handleSearch = async (searchQuery: string) => {
     if (!searchQuery) return;
     const location = await searchLocation(searchQuery);
     if (location) {
@@ -50,6 +50,11 @@ export function Header() {
     </Popover>
   );
 
+  const handleAutocompleteSelect = (suggestion: { name: string; lat: number; lng: number; }) => {
+    setQuery(suggestion.name); 
+    panTo([suggestion.lat, suggestion.lng]);
+  };
+
   if (!isMobile) {
     return (
       <header className="bg-card border-b shadow-sm w-full h-16 flex items-center justify-between px-6 z-30">
@@ -60,7 +65,14 @@ export function Header() {
         <div className="flex-grow flex justify-center">
           <div className="w-full max-w-lg flex items-center gap-2">
             {NoticeButton}
-            <AutocompleteInput value={query} onValueChange={setQuery} onSuggestionSelect={(s) => { setQuery(s.name); panTo([s.lat, s.lng]); }} placeholder="Buscar ciudad o país..." className="bg-background"/>
+            <AutocompleteInput 
+              value={query} 
+              onValueChange={setQuery} 
+              onSuggestionSelect={handleAutocompleteSelect}
+              fetchSuggestions={autocompleteSearch}
+              placeholder="Buscar ciudad o país..." 
+              className="bg-background"
+            />
             <Button onClick={() => handleSearch(query)}><Search className="h-4 w-4 mr-2" />Buscar</Button>
           </div>
         </div>
@@ -111,6 +123,7 @@ export function Header() {
                 setQuery(suggestion.name);
                 handleSearch(suggestion.name);
               }}
+              fetchSuggestions={autocompleteSearch}
             />
             <Button variant="ghost" size="sm" onClick={() => setIsSearchActive(false)}><X className="h-5 w-5" /></Button>
           </div>
