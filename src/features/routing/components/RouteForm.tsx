@@ -4,19 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { toast } from "@/hooks/use-toast";
-import { MoveRight, Locate, Loader2, Car, Bike, PersonStanding } from "lucide-react";
+import { MoveRight, Locate, Loader2, Car, Bike, PersonStanding, ArrowRightLeft } from "lucide-react";
 import { Profile } from "../types";
 import { AutocompleteInput } from './AutocompleteInput'; 
 
 interface RouteFormProps {
+  origin: string;
+  setOrigin: (value: string) => void;
+  destination: string;
+  setDestination: (value: string) => void;
   onCalculationStart?: () => void;
 }
 
-export function RouteForm({ onCalculationStart }: RouteFormProps) {
-  const [origin, setOrigin] = useState("");
-  const [destination, setDestination] = useState("");
+export function RouteForm({ origin, setOrigin, destination, setDestination, onCalculationStart }: RouteFormProps) {
   const [isLocating, setIsLocating] = useState(false);
-  
   const { calculateRoute, reverseGeocode, autocompleteSearch, profile, setProfile } = useRoutingContext();
 
   const handleUseCurrentLocation = () => {
@@ -26,13 +27,8 @@ export function RouteForm({ onCalculationStart }: RouteFormProps) {
         const { latitude, longitude } = position.coords;
         try {
           const address = await reverseGeocode(latitude, longitude);
-          if (address) {
-            setOrigin(address);
-            toast({ title: "Ubicación encontrada", description: "Origen actualizado." });
-          } else {
-            setOrigin(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
-            toast({ title: "Ubicación encontrada", description: "Coordenadas capturadas." });
-          }
+          setOrigin(address || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
+          toast({ title: "Ubicación encontrada", description: "Origen actualizado." });
         } catch (error) {
           toast({ title: "Error", description: "No se pudo obtener el nombre de la ubicación.", variant: "destructive" });
         } finally {
@@ -49,10 +45,16 @@ export function RouteForm({ onCalculationStart }: RouteFormProps) {
     );
   };
 
+  const handleInvert = () => {
+    const tempOrigin = origin;
+    setOrigin(destination);
+    setDestination(tempOrigin);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (origin && destination) {
-      onCalculationStart?.(); 
+      onCalculationStart?.();
       calculateRoute(origin, destination);
     } else {
       toast({ title: "Campos incompletos", description: "Por favor, introduce un origen y un destino.", variant: "destructive"})
@@ -81,6 +83,20 @@ export function RouteForm({ onCalculationStart }: RouteFormProps) {
             disabled={isLocating}
           />
         </div>
+
+        <div className="flex justify-center items-center -my-2">
+            <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleInvert}
+                className="rounded-full border bg-card hover:bg-accent"
+                aria-label="Invertir origen y destino"
+            >
+                <ArrowRightLeft className="h-4 w-4 text-primary" />
+            </Button>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="destination">Destino</Label>
           <AutocompleteInput
@@ -93,18 +109,13 @@ export function RouteForm({ onCalculationStart }: RouteFormProps) {
             required
           />
         </div>
+        
         <div className="space-y-2">
           <Label>Modo de transporte</Label>
           <ToggleGroup type="single" value={profile} onValueChange={(value: Profile) => { if (value) setProfile(value); }} className="w-full grid grid-cols-3 gap-2">
-            <ToggleGroupItem value="driving" aria-label="Vehículo" className="w-full flex items-center gap-2">
-              <Car className="h-5 w-5" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="cycling" aria-label="Bicicleta" className="w-full flex items-center gap-2">
-              <Bike className="h-5 w-5" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="walking" aria-label="A pie" className="w-full flex items-center gap-2">
-              <PersonStanding className="h-5 w-5" />
-            </ToggleGroupItem>
+            <ToggleGroupItem value="driving" aria-label="Vehículo" className="w-full"><Car className="h-5 w-5" /></ToggleGroupItem>
+            <ToggleGroupItem value="cycling" aria-label="Bicicleta" className="w-full"><Bike className="h-5 w-5" /></ToggleGroupItem>
+            <ToggleGroupItem value="walking" aria-label="A pie" className="w-full"><PersonStanding className="h-5 w-5" /></ToggleGroupItem>
           </ToggleGroup>
         </div>
       </div>

@@ -12,10 +12,10 @@ import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "
 
 interface RouteDetailsProps {
   route: RouteData;
-  onClear: () => void;
+  onReturnToSearch: () => void;
 }
 
-export function RouteDetails({ route, onClear }: RouteDetailsProps) {
+export function RouteDetails({ route, onReturnToSearch }: RouteDetailsProps) {
   const { profile, setProfile } = useRoutingContext();
 
   const distanceInKm = ((route.distance ?? 0) / 1000).toFixed(1);
@@ -52,21 +52,41 @@ export function RouteDetails({ route, onClear }: RouteDetailsProps) {
     <>
       <CardHeader>
         <div className="flex justify-between items-start">
-            <div><CardTitle>Detalles de la Ruta</CardTitle><CardDescription>Resumen del viaje calculado.</CardDescription></div>
-            <Button variant="ghost" size="icon" onClick={onClear} className="h-8 w-8 -mt-2 -mr-2"><X className="h-5 w-5" /></Button>
+            <div>
+                <CardTitle>Detalles de la Ruta</CardTitle>
+                <CardDescription>Resumen del viaje calculado.</CardDescription>
+            </div>
+            <Button variant="ghost" size="icon" onClick={onReturnToSearch} className="h-8 w-8 -mt-2 -mr-2">
+                <X className="h-5 w-5" />
+            </Button>
         </div>
       </CardHeader>
+      
       <div className="p-6 pt-0">
         <div className="flex justify-around text-center mb-4">
-          <div className="flex flex-col items-center"><Milestone className="h-6 w-6 text-primary mb-1" /><span className="font-bold">{distanceInKm} km</span><span className="text-xs text-muted-foreground">Distancia</span></div>
-          <div className="flex flex-col items-center"><Clock className="h-6 w-6 text-primary mb-1" /><span className="font-bold">{formattedDuration}</span><span className="text-xs text-muted-foreground">Duración</span></div>
-          <div className="flex flex-col items-center"><ProfileIcon className="h-6 w-6 text-primary mb-1" /><span className="font-bold">{selectedProfile.label}</span><span className="text-xs text-muted-foreground">Modo</span></div>
+          <div className="flex flex-col items-center">
+              <Milestone className="h-6 w-6 text-primary mb-1" />
+              <span className="font-bold">{distanceInKm} km</span>
+              <span className="text-xs text-muted-foreground">Distancia</span>
+          </div>
+          <div className="flex flex-col items-center">
+              <Clock className="h-6 w-6 text-primary mb-1" />
+              <span className="font-bold">{formattedDuration}</span>
+              <span className="text-xs text-muted-foreground">Duración</span>
+          </div>
+          <div className="flex flex-col items-center">
+              <ProfileIcon className="h-6 w-6 text-primary mb-1" />
+              <span className="font-bold">{selectedProfile.label}</span>
+              <span className="text-xs text-muted-foreground">Modo</span>
+          </div>
         </div>
         <Separator className="my-4" />
         
         {chartData.length > 0 && (
           <div className="space-y-2 mb-6">
-            <Label className="text-base font-semibold flex items-center gap-2"><Mountain className="h-5 w-5"/> Perfil de Altitud</Label>
+            <Label className="text-base font-semibold flex items-center gap-2">
+                <Mountain className="h-5 w-5"/> Perfil de Altitud
+            </Label>
             <div className="h-40 w-full">
               <ChartContainer config={chartConfig}>
                 <AreaChart accessibilityLayer data={chartData} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
@@ -94,8 +114,11 @@ export function RouteDetails({ route, onClear }: RouteDetailsProps) {
           </ToggleGroup>
         </div>
       </div>
+      
       <div className="p-6 pt-0 mt-4">
-        <Button onClick={onClear} variant="outline" className="w-full">Realizar nueva búsqueda</Button>
+        <Button onClick={onReturnToSearch} variant="outline" className="w-full">
+          Modificar Búsqueda
+        </Button>
       </div>
     </>
   );

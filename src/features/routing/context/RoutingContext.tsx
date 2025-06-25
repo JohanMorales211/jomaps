@@ -4,7 +4,8 @@ import { RouteData, RoutePoint, Profile, RouteBounds, AutocompleteSuggestion } f
 
 interface RoutingContextProps {
   calculateRoute: (origin: string, destination: string) => Promise<void>;
-  clearRoute: () => void;
+  clearRouteAndPoints: () => void;
+  clearCalculatedRoute: () => void;
   currentRoute: RouteData | null;
   isCalculating: boolean;
   searchLocation: (query: string) => Promise<RoutePoint | null>;
@@ -15,6 +16,8 @@ interface RoutingContextProps {
   setProfile: (profile: Profile) => void;
   routeBounds: RouteBounds | null;
   autocompleteSearch: (query: string) => Promise<AutocompleteSuggestion[]>;
+  originPoint: RoutePoint | null;
+  destinationPoint: RoutePoint | null;
 }
 
 const RoutingContext = createContext<RoutingContextProps | undefined>(undefined);
