@@ -52,7 +52,6 @@ export function WelcomeScreen({ onFinished }: WelcomeScreenProps) {
         </p>
       </div>
 
-      {/* --- Firma en la parte inferior --- */}
       <div className="absolute bottom-10 left-0 right-0">
         <p 
           className="text-center text-base md:text-lg text-muted-foreground animate-text-fade-in"
