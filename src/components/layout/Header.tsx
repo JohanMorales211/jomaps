@@ -59,7 +59,11 @@ export function Header() {
     return (
       <header className="bg-card border-b shadow-sm w-full h-16 flex items-center justify-between px-6 z-30">
         <div className="flex items-center gap-3">
-          <img src="/solo_logo.png" alt="Logo de Jomaps" className="h-12 w-12 object-contain" />
+          <img 
+            src={`${import.meta.env.BASE_URL}solo_logo.png`}
+            alt="Logo de Jomaps" 
+            className="h-12 w-12 object-contain" 
+          />
           <h1 className="text-xl font-bold text-foreground">Jomaps</h1>
         </div>
         <div className="flex-grow flex justify-center">
@@ -92,7 +96,11 @@ export function Header() {
       <header className="bg-card border-b shadow-sm w-full h-16 flex items-center px-4 z-30">
         <div className="w-full flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <img src="/solo_logo.png" alt="Logo de Jomaps" className="h-12 w-12 object-contain" />
+            <img 
+              src={`${import.meta.env.BASE_URL}solo_logo.png`}
+              alt="Logo de Jomaps" 
+              className="h-12 w-12 object-contain" 
+            />
             <h1 className="text-xl font-bold text-foreground">Jomaps</h1>
           </div>
           <div className="flex items-center">

@@ -21,7 +21,7 @@ export function LoadingOverlay({ isLoading }: LoadingOverlayProps) {
       role="alert"
     >
       <img
-        src="/animacion_carga.gif"
+        src={`${import.meta.env.BASE_URL}animacion_carga.gif`}
         alt="Calculando ruta..."
         className="w-48 h-48"
       />

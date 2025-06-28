@@ -32,7 +32,7 @@ export function WelcomeScreen({ onFinished }: WelcomeScreenProps) {
     >
       <div className="flex flex-col items-center justify-center">
         <img 
-          src="/solo_logo.png" 
+          src={`${import.meta.env.BASE_URL}solo_logo.png`}
           alt="Logo de Jomaps"
           className="h-32 w-32 md:h-48 md:w-48 mb-8 animate-logo-bounce-in"
         />
@@ -52,6 +52,7 @@ export function WelcomeScreen({ onFinished }: WelcomeScreenProps) {
         </p>
       </div>
 
+      {/* --- Firma en la parte inferior --- */}
       <div className="absolute bottom-10 left-0 right-0">
         <p 
           className="text-center text-base md:text-lg text-muted-foreground animate-text-fade-in"
