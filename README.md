@@ -1,73 +1,72 @@
-# Welcome to your Lovable project
+# Jomaps 🗺️
 
-## Project info
+Un planificador de rutas interactivo y moderno, construido con React, Vite y Leaflet.
 
-**URL**: https://lovable.dev/projects/0f157f43-7464-491d-82c1-73e960d5e81f
+**[🚀 Ver Demo en Vivo 🚀](https://johanmorales211.github.io/jomaps/)**
 
-## How can I edit this code?
+![Demostración de Jomaps](https://i.postimg.cc/6QPgyFpH/foto-jomaps.png)
 
-There are several ways of editing your application.
+## 📌 Acerca del Proyecto
 
-**Use Lovable**
+**Jomaps** es una aplicación web de mapas diseñada para ofrecer una experiencia de usuario fluida y eficiente al planificar viajes. Permite a los usuarios buscar ubicaciones, calcular rutas para diferentes medios de transporte y visualizar detalles del trayecto como la distancia, la duración estimada y el perfil de altitud.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0f157f43-7464-491d-82c1-73e960d5e81f) and start prompting.
+Este proyecto fue desarrollado como una demostración de habilidades en el desarrollo frontend moderno, integrando APIs externas y construyendo una interfaz de usuario limpia y responsiva con las últimas tecnologías.
 
-Changes made via Lovable will be committed automatically to this repo.
+## ✨ Características Principales
 
-**Use your preferred IDE**
+-   **Múltiples Modos de Transporte:** Calcula rutas para vehículo, bicicleta o a pie.
+-   **Búsqueda Inteligente:** Encuentra ubicaciones fácilmente con un buscador que ofrece autocompletado.
+-   **Mapa Interactivo:** Visualiza la ruta trazada sobre un mapa de OpenStreetMap, con la capacidad de hacer zoom y moverte libremente.
+-   **Detalles de la Ruta:** Obtén información clave como distancia, duración y un gráfico con el perfil de elevación del terreno.
+-   **Ubicación Actual:** Utiliza la geolocalización del navegador para establecer tu punto de partida con un solo clic.
+-   **Diseño Responsivo:** Una experiencia de usuario óptima tanto en dispositivos de escritorio como en móviles.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Tecnologías Utilizadas
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Este proyecto fue construido utilizando un stack de tecnologías moderno y eficiente:
 
-Follow these steps:
+-   **React**
+-   **Vite**
+-   **TypeScript**
+-   **Leaflet & React-Leaflet**
+-   **OpenRouteService API**
+-   **Tailwind CSS**
+-   **Shadcn/UI**
+-   **React Context API**
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🚀 Cómo Empezar (Desarrollo Local)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Si deseas ejecutar este proyecto en tu máquina local, sigue estos pasos:
 
-# Step 3: Install the necessary dependencies.
-npm i
+1.  **Clona el repositorio:**
+    ```sh
+    git clone https://github.com/JohanMorales211/jomaps.git
+    cd jomaps
+    ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+2.  **Instala las dependencias:**
+    ```sh
+    npm install
+    ```
 
-**Edit a file directly in GitHub**
+3.  **Configura las variables de entorno:**
+    -   Crea un archivo `.env` en la raíz del proyecto.
+    -   Necesitarás una API Key de [OpenRouteService](https://openrouteservice.org/). Es gratuita para desarrollo.
+    -   Añade tu clave al archivo `.env` de la siguiente manera:
+    ```
+    VITE_ORS_API_KEY=tu_api_key_aqui
+    ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+4.  **Ejecuta el servidor de desarrollo:**
+    ```sh
+    npm run dev
+    ```
+    La aplicación estará disponible en `http://localhost:8080`.
 
-**Use GitHub Codespaces**
+## ✍️ Autor
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+**Johan Morales**
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/0f157f43-7464-491d-82c1-73e960d5e81f) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+-   **GitHub:** [@JohanMorales211](https://github.com/JohanMorales211)
+-   **LinkedIn:** [Johan Morales](https://www.linkedin.com/in/johan-morales-b3809b206/)
+-   **Portafolio:** [johanmorales211.github.io](https://johanmorales211.github.io/portafolio-personal/)
