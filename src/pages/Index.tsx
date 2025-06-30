@@ -8,7 +8,7 @@ export function Index() {
   const { isCalculating } = useRoutingContext();
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-background overflow-hidden relative">
+    <div className="h-dvh w-screen flex flex-col bg-background overflow-hidden relative">
       
       <LoadingOverlay isLoading={isCalculating} />
 

@@ -93,7 +93,13 @@ export function Header() {
 
   return (
     <>
-      <header className="bg-card border-b shadow-sm w-full h-16 flex items-center px-4 z-30">
+      <header 
+        className="bg-card border-b shadow-sm w-full h-16 flex items-center px-4 z-30"
+        style={{
+          paddingTop: 'env(safe-area-inset-top)',
+          height: 'calc(4rem + env(safe-area-inset-top))'
+        }}
+      >
         <div className="w-full flex justify-between items-center">
           <div className="flex items-center gap-3">
             <img 
@@ -119,7 +125,10 @@ export function Header() {
       </header>
 
       {isSearchActive && (
-        <div className="fixed top-0 left-0 w-full bg-card z-40 p-2 border-b animate-in fade-in-25">
+        <div 
+          className="fixed top-0 left-0 w-full bg-card z-40 p-2 border-b animate-in fade-in-25"
+          style={{ paddingTop: 'calc(0.5rem + env(safe-area-inset-top))' }}
+        >
           <div className="flex items-center gap-2">
             <AutocompleteInput 
               autoFocus
