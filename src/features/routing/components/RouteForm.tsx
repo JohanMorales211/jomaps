@@ -1,10 +1,9 @@
-import { useState } from "react";
 import { useRoutingContext } from "../context/RoutingContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { toast } from "@/hooks/use-toast";
-import { MoveRight, Locate, Loader2, Car, Bike, PersonStanding, ArrowRightLeft } from "lucide-react";
+import { MoveRight, Car, Bike, PersonStanding, ArrowRightLeft } from "lucide-react";
 import { Profile } from "../types";
 import { AutocompleteInput } from './AutocompleteInput'; 
 
@@ -17,33 +16,15 @@ interface RouteFormProps {
 }
 
 export function RouteForm({ origin, setOrigin, destination, setDestination, onCalculationStart }: RouteFormProps) {
-  const [isLocating, setIsLocating] = useState(false);
-  const { calculateRoute, reverseGeocode, autocompleteSearch, profile, setProfile } = useRoutingContext();
+  const { 
+    calculateRoute, 
+    autocompleteSearch, 
+    profile, 
+    setProfile,
+    clearOriginPoint,
+    clearDestinationPoint,
+  } = useRoutingContext();
 
-  const handleUseCurrentLocation = () => {
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const address = await reverseGeocode(latitude, longitude);
-          setOrigin(address || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
-          toast({ title: "Ubicación encontrada", description: "Origen actualizado." });
-        } catch (error) {
-          toast({ title: "Error", description: "No se pudo obtener el nombre de la ubicación.", variant: "destructive" });
-        } finally {
-          setIsLocating(false);
-        }
-      },
-      (error) => {
-        const errorMessage = error.code === error.PERMISSION_DENIED 
-          ? "Permiso de ubicación denegado." 
-          : "No se pudo obtener tu ubicación.";
-        toast({ title: "Error de ubicación", description: errorMessage, variant: "destructive" });
-        setIsLocating(false);
-      }
-    );
-  };
 
   const handleInvert = () => {
     const tempOrigin = origin;
@@ -65,22 +46,16 @@ export function RouteForm({ origin, setOrigin, destination, setDestination, onCa
     <form onSubmit={handleSubmit}>
       <div className="p-6 pt-0 space-y-4">
         <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Label htmlFor="origin">Origen</Label>
-            <Button type="button" variant="ghost" size="sm" onClick={handleUseCurrentLocation} disabled={isLocating} className="text-primary hover:text-primary h-8">
-              {isLocating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Locate className="mr-2 h-4 w-4" />}
-              Ubicación actual
-            </Button>
-          </div>
+          <Label htmlFor="origin">Origen</Label>
           <AutocompleteInput
             id="origin"
-            placeholder="Ej: Bogotá, Colombia"
+            placeholder="Escribe o haz clic en el mapa"
             value={origin}
             onValueChange={setOrigin}
             onSuggestionSelect={(suggestion) => setOrigin(suggestion.name)}
             fetchSuggestions={autocompleteSearch}
+            onClear={clearOriginPoint}
             required
-            disabled={isLocating}
           />
         </div>
 
@@ -101,11 +76,12 @@ export function RouteForm({ origin, setOrigin, destination, setDestination, onCa
           <Label htmlFor="destination">Destino</Label>
           <AutocompleteInput
             id="destination"
-            placeholder="Ej: Medellín, Colombia"
+            placeholder="Escribe o haz clic en el mapa"
             value={destination}
             onValueChange={setDestination}
             onSuggestionSelect={(suggestion) => setDestination(suggestion.name)}
             fetchSuggestions={autocompleteSearch}
+            onClear={clearDestinationPoint}
             required
           />
         </div>

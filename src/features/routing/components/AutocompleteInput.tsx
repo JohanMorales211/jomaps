@@ -9,6 +9,7 @@ interface AutocompleteInputProps extends Omit<React.ComponentProps<typeof Input>
   onValueChange: (value: string) => void;
   onSuggestionSelect: (suggestion: AutocompleteSuggestion) => void;
   fetchSuggestions: (query: string) => Promise<AutocompleteSuggestion[]>;
+  onClear?: () => void;
 }
 
 export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({ 
@@ -16,6 +17,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   onValueChange, 
   onSuggestionSelect, 
   fetchSuggestions,
+  onClear,
   ...props 
 }) => {
   const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
@@ -71,6 +73,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   
   const handleClear = () => {
     onValueChange('');
+    onClear?.();
     inputRef.current?.focus();
   };
 

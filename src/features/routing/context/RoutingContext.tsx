@@ -6,6 +6,8 @@ interface RoutingContextProps {
   calculateRoute: (origin: string, destination: string) => Promise<void>;
   clearRouteAndPoints: () => void;
   clearCalculatedRoute: () => void;
+  clearOriginPoint: () => void;
+  clearDestinationPoint: () => void;
   currentRoute: RouteData | null;
   isCalculating: boolean;
   searchLocation: (query: string) => Promise<RoutePoint | null>;
@@ -18,6 +20,7 @@ interface RoutingContextProps {
   autocompleteSearch: (query: string) => Promise<AutocompleteSuggestion[]>;
   originPoint: RoutePoint | null;
   destinationPoint: RoutePoint | null;
+  setPointFromMapClick: (lat: number, lng: number) => void;
 }
 
 const RoutingContext = createContext<RoutingContextProps | undefined>(undefined);
