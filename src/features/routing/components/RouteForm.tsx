@@ -49,7 +49,7 @@ export function RouteForm({ origin, setOrigin, destination, setDestination, onCa
           <Label htmlFor="origin">Origen</Label>
           <AutocompleteInput
             id="origin"
-            placeholder="Escribe o haz clic en el mapa"
+            placeholder="Escribe o haz doble clic en el mapa"
             value={origin}
             onValueChange={setOrigin}
             onSuggestionSelect={(suggestion) => setOrigin(suggestion.name)}
@@ -76,7 +76,7 @@ export function RouteForm({ origin, setOrigin, destination, setDestination, onCa
           <Label htmlFor="destination">Destino</Label>
           <AutocompleteInput
             id="destination"
-            placeholder="Escribe o haz clic en el mapa"
+            placeholder="Escribe o haz doble clic en el mapa"
             value={destination}
             onValueChange={setDestination}
             onSuggestionSelect={(suggestion) => setDestination(suggestion.name)}

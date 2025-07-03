@@ -6,6 +6,7 @@ import { useRoutingContext } from '@/features/routing/context/RoutingContext';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { LocateFixed, Car, Bike, PersonStanding } from 'lucide-react';
+import type { RoutePoint } from '@/features/routing/types';
 
 const customStartIcon = new L.Icon({
     iconUrl: `${import.meta.env.BASE_URL}icono_origen.png`,
@@ -162,7 +163,7 @@ const MapEvents = () => {
     }, [routeBounds, map]);
     
     useMapEvents({
-      click(e) {
+      dblclick(e) {
         setPointFromMapClick(e.latlng.lat, e.latlng.lng);
       },
     });
@@ -175,8 +176,8 @@ export function MapComponent() {
   const defaultPosition: LatLngExpression = [4.5709, -74.2973];
   const defaultZoom = 6; 
 
-  const getIconForPoint = (point: typeof originPoint, type: 'start' | 'end') => {
-    const isCustom = (point?.name || '').startsWith('Punto (');
+  const getIconForPoint = (point: RoutePoint | null, type: 'start' | 'end') => {
+    const isCustom = (point?.name || '').startsWith('Punto de');
     if (type === 'start') {
         return isCustom ? customStartIcon : defaultStartIcon;
     }
@@ -184,7 +185,7 @@ export function MapComponent() {
   };
 
   return (
-    <MapContainer center={defaultPosition} zoom={defaultZoom} style={{ height: '100%', width: '100%', zIndex: 0 }}>
+    <MapContainer center={defaultPosition} zoom={defaultZoom} style={{ height: '100%', width: '100%', zIndex: 0 }} doubleClickZoom={false}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
